@@ -52,7 +52,23 @@ class ClinicalTrialAgent:
     def _register_tools(self) -> None:
         if not self.graph:
             return
-        for tool in create_graph_tools(self.graph):
+        
+        # Initialize LLM for HopRAG if enabled
+        hop_engine = None
+        if self.config.hop_rag.enabled:
+            self._init_llm()
+            try:
+                from .hop_rag import HopRAGEngine
+            except ImportError:
+                from hop_rag import HopRAGEngine
+            
+            hop_engine = HopRAGEngine(
+                graph=self.graph, 
+                llm=self._llm,
+                config=self.config.hop_rag
+            )
+
+        for tool in create_graph_tools(self.graph, hop_engine=hop_engine):
             self.tools.register(tool)
         self.tools.register(create_code_executor_tool(self.config.graph.data_dir))
         print(f"✓ {len(self.tools.list_tools())} tools registered")
@@ -63,7 +79,14 @@ class ClinicalTrialAgent:
     def _init_llm(self):
         if self._llm:
             return
-        if self.config.llm.provider == "google":
+        if self.config.llm.provider == "groq":
+            from langchain_groq import ChatGroq
+            self._llm = ChatGroq(
+                model=self.config.llm.model_name,
+                temperature=self.config.llm.temperature,
+                groq_api_key=self.config.llm.api_key,
+            )
+        elif self.config.llm.provider == "google":
             from langchain_google_genai import ChatGoogleGenerativeAI
             self._llm = ChatGoogleGenerativeAI(
                 model=self.config.llm.model_name,
@@ -91,7 +114,10 @@ class ClinicalTrialAgent:
         self._build_agent()
         try:
             from langchain_core.messages import HumanMessage
-            result = self._agent.invoke({"messages": [HumanMessage(content=question)]})
+            result = self._agent.invoke(
+                {"messages": [HumanMessage(content=question)]},
+                config={"recursion_limit": 50}
+            )
             msgs = result.get("messages", [])
             return {"output": msgs[-1].content if msgs else "No response", "messages": msgs}
         except Exception as e:
@@ -117,7 +143,7 @@ def create_agent(api_key: str = None, auto_load: bool = True) -> ClinicalTrialAg
 if __name__ == "__main__":
     agent = create_agent()
     print(f"\nTools: {agent.list_tools()}")
-    result = agent.query("Where are the most open issues in lab reconciliation or coding?")
+    result = agent.query("Investigate the specific open issues and safety reviews connected to Site 637. What subjects are involved and what are the details?")
     output = result['output']
     if isinstance(output, list):
         text = "\n".join(block.get('text', '') for block in output if block.get('type') == 'text')

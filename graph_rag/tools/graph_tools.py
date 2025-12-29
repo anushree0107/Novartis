@@ -203,8 +203,75 @@ class FlexibleGraphQueryTool(GraphQueryMixin, BaseTool):
         return f"{source_type} → {target_type}:\n" + "\n".join(f"- {t}: {c}" for t, c in results) if results else "No results"
 
 
-def create_graph_tools(graph: nx.DiGraph = None) -> List[BaseTool]:
-    return [
+class MultiHopQueryInput(BaseModel):
+    query: str = Field(description="Complex query requiring multi-hop reasoning")
+    n_hops: int = Field(default=2, description="Number of hops to traverse")
+    top_k: int = Field(default=5, description="Number of results to return")
+
+
+class MultiHopQueryTool(GraphQueryMixin, BaseTool):
+    name = "multi_hop_graph_query"
+    description = """Use for complex questions requiring information from multiple connected entities.
+    Examples:
+    - "Which sites have subjects with both open issues AND pending safety reviews?"
+    - "Find studies where subjects have both coding problems and missing pages"
+    - "What subjects at Site X have discrepancies older than 30 days?"
+    Best for: Cross-entity analysis, multi-condition queries, relationship exploration."""
+    
+    def __init__(self, graph: nx.DiGraph = None, hop_engine=None, **kwargs):
+        super().__init__(graph=graph, **kwargs)
+        self._hop_engine = hop_engine
+    
+    @property
+    def args_schema(self) -> Type[BaseModel]:
+        return MultiHopQueryInput
+    
+    def _run(self, query: str, n_hops: int = 2, top_k: int = 5) -> str:
+        if not self._hop_engine:
+            # Lazy init if not provided
+            try:
+                from ..hop_rag import HopRAGEngine
+            except ImportError:
+                from hop_rag import HopRAGEngine
+            
+            # Use provided LLM or let engine init it
+            self._hop_engine = HopRAGEngine(self.graph)
+            # If we were given an LLM in kwargs during init but didn't make engine yet
+            # Note: MultiHopQueryTool usually gets engine passed in if created via create_multi_hop_tool
+            # But if created via registry/init, we might lack engine.
+            # Ideally the agent injects the engine or LLM.
+        
+        # Execute retrieve-reason-prune
+        results = self._hop_engine.retrieve_reason_prune(
+            query=query,
+            top_k=top_k,
+            n_hops=n_hops
+        )
+        
+        if not results:
+            return "No relevant information found for this multi-hop query."
+        
+        # Format results
+        context = self._hop_engine.format_results_for_context(results)
+        
+        # Add summary
+        node_types = {}
+        for r in results:
+            node_types[r.node_type] = node_types.get(r.node_type, 0) + 1
+        
+        type_summary = ", ".join(f"{count} {t}s" for t, count in node_types.items())
+        
+        return f"Multi-hop query found {len(results)} relevant nodes ({type_summary}):\n{context}"
+
+
+def create_graph_tools(graph: nx.DiGraph = None, hop_engine=None) -> List[BaseTool]:
+    """
+    Create all graph tools. 
+    Args:
+        graph: The knowledge graph
+        hop_engine: Optional initialized HopRAGEngine (shares LLM)
+    """
+    tools = [
         StudyInfoTool(graph=graph),
         SubjectIssuesTool(graph=graph),
         SafetyReviewTool(graph=graph),
@@ -213,3 +280,19 @@ def create_graph_tools(graph: nx.DiGraph = None) -> List[BaseTool]:
         SiteRiskTool(graph=graph),
         FlexibleGraphQueryTool(graph=graph),
     ]
+    
+    # Create multi-hop tool with engine
+    mh_tool = MultiHopQueryTool(graph=graph, hop_engine=hop_engine)
+    if not hop_engine and graph:
+        # If no engine provided, we'll try to create one lazily, but it won't have shared LLM
+        # unless we modify this signature further. For now this is valid.
+        pass
+        
+    tools.append(mh_tool)
+    return tools
+
+
+def create_multi_hop_tool(graph: nx.DiGraph, hop_engine=None) -> BaseTool:
+    """Create a multi-hop query tool with optional pre-configured engine."""
+    return MultiHopQueryTool(graph=graph, hop_engine=hop_engine)
+
