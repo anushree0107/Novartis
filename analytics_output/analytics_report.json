@@ -1,0 +1,34 @@
+{
+  "generated_at": "2025-12-29T13:11:43.914001Z",
+  "summary": {
+    "total_studies": 23,
+    "overall_dq_score": 79.0,
+    "anomalies_detected": 4,
+    "best_model": "Logistic Regression"
+  },
+  "dq_scores": {
+    "edrr": 100,
+    "meddra": 100,
+    "whodd": 100,
+    "esae": 60,
+    "missing_pages": 54,
+    "visit_projection": 60
+  },
+  "model_results": [
+    {
+      "Model": "Logistic Regression",
+      "AUC-ROC": 1.0,
+      "F1": 0.8
+    },
+    {
+      "Model": "Random Forest",
+      "AUC-ROC": 1.0,
+      "F1": 0.8
+    },
+    {
+      "Model": "Gradient Boosting",
+      "AUC-ROC": 1.0,
+      "F1": 1.0
+    }
+  ]
+}
