@@ -1,2 +1,5 @@
 Data/*.zip
 *.zip
+myenv/
+__pycache__
+clinical_trial_graph.graphml

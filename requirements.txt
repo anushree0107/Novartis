@@ -1,0 +1,13 @@
+# Core LangChain & LangGraph
+langchain>=1.2.0
+langchain-core>=1.2.5
+langchain-google-genai>=4.1.2
+langgraph>=1.0.5
+langgraph-prebuilt>=1.0.5
+
+# Data Processing
+pandas>=2.0.0
+networkx>=3.0
+
+# Environment
+python-dotenv>=1.0.0

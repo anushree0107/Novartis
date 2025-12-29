@@ -1,0 +1,28 @@
+{
+  "total_nodes": 424475,
+  "total_edges": 442122,
+  "node_types": {
+    "Study": 24,
+    "Subject": 26214,
+    "Country": 103,
+    "Site": 1606,
+    "SafetyDiscrepancy": 17025,
+    "MedDRACoding": 66858,
+    "WHODDCoding": 306687,
+    "Visit": 4029,
+    "Form": 446,
+    "MissingPage": 1483
+  },
+  "edge_types": {
+    "ENROLLED_IN": 28442,
+    "LOCATED_IN": 2224,
+    "CONDUCTED_AT": 2113,
+    "ENROLLED_AT": 7720,
+    "HAS_DISCREPANCY": 17098,
+    "HAS_AE_CODING": 66858,
+    "HAS_DRUG_CODING": 306687,
+    "HAS_VISIT": 4029,
+    "COMPLETED_FORM": 5468,
+    "MISSING_PAGE_FOR": 1483
+  }
+}
