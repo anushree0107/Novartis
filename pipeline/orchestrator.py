@@ -1,7 +1,3 @@
-"""
-CHESS Pipeline Orchestrator
-Coordinates all 5 agents in sequence for Text-to-SQL synthesis
-"""
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 import time
@@ -23,7 +19,6 @@ from config.settings import GROQ_API_KEY
 
 @dataclass
 class PipelineResult:
-    """Result from the complete CHESS pipeline"""
     success: bool
     sql: str
     question: str
@@ -97,18 +92,7 @@ class PipelineResult:
         return "\n".join(lines)
 
 
-class CHESSPipeline:
-    """
-    CHESS Text-to-SQL Pipeline
-    
-    Orchestrates 5 agents:
-    1. Information Retriever (IR) - Extracts keywords, entities, context
-    2. Schema Selector (SS) - Selects relevant tables and columns
-    3. Candidate Generator (CG) - Generates and refines SQL candidates
-    4. Unit Tester (UT) - Selects best candidate via unit tests
-    5. Result Explainer (RE) - Explains results in natural language
-    """
-    
+class CHESSPipeline:    
     def __init__(
         self,
         llm_client: GroqLLMClient = None,
