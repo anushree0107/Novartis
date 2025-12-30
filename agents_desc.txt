@@ -1,0 +1,205 @@
+3.1 Agents: Descriptions and Tools
+In this subsection, we introduce the core agents of the
+CHESS framework and their respective tools, each specif-
+ically designed to tackle the unique challenges of the text-
+to-SQL task. The five agents, Information Retriever (IR),
+Schema Selector (SS), Candidate Generator (CG), Unit
+Tester (UT), and Result Explainer (RE), play essential roles
+in the framework, leveraging specialized tools to perform
+their assigned functions. Below, we provide a detailed
+explanation of each agent's role and the tools they employ
+to enable efficient and high-performance SQL query
+generation with natural language explanations.
+Implementation details and prompt templates are provided
+in Appendix A and C.
+Information Retriever (IR) The information retriever agent
+equipped with the tools, extract keywords, entity retriever,
+and context retriever, gathers relevant information related to
+the input, including entities mentioned in the question and
+the contextual information provided in the database catalog.
+The tools are described as follows:
+extract keywords. To search for the similar values in the
+database and schema description, the agent needs to ex-
+tract the main keywords from the natural language question.
+This tool uses a few-shot LLM call to extract the primary
+keywords and key phrases from the input.
+retrieve entity. From the list of keywords extracted from
+the question, some may correspond to entities present in the
+database. This tool allows the agent to search for similar
+values in the database and return the most relevant matches,
+along with their corresponding columns, for each keyword.
+To assess syntactic similarity between the keywords and
+the database values, we employ the edit distance similarity
+metric. Additionally, to enhance retrieval efficiency, we
+propose a hierarchical retrieval strategy based on Locality
+Sensitive Hashing (LSH) and semantic (embedding) simi-
+larity measures, which we explain in detail in Appendix A.
+This approach enables the agent to retrieve values that ex-
+hibit both syntactic and semantic similarity to the keywords
+effectively.
+retrieve context. In addition to retrieving values, the IR
+agent can access the database catalog, which often includes
+schema metadata, such as column descriptions, extended
+column names (to resolve abbreviations), and value descrip-
+tions. As shown in Figure 1, this information can be useful,
+and not providing it to the model can lead to suboptimal
+performance. The IR agent uses this tool to retrieve the most
+relevant descriptions from the database catalog by query-
+ing a vector database of descriptions, constructed during
+the preprocessing. Retrieval is based on semantic (embed-
+ding) similarity, ensuring that the most relevant context is
+provided to the model.
+Schema Selector (SS) The goal of the Schema Selector
+(SS) agent is to reduce the schema size by selecting only the
+necessary tables and columns required for generating the
+SQL query. To achieve this, the SS agent is equipped with
+three tools, filter column, select tables, and select columns.
+filter column Databases often contain hundreds of columns,
+many of which may be semantically irrelevant to the user’s
+query. Inspired by this observation, we design this tool
+which takes a column name and the question as input and
+determines whether the column is relevant. While this task
+could be perform using embedding-based similarity meth-
+ods, we opt for a relatively inexpensive LLM to ensure high
+accuracy.
+Although this tool is effective at filtering out irrelevant
+columns, identifying relevant schema elements accurately
+often requires processing multiple schema items together.
+The following tools complement this process by handling
+such scenarios.
+select tables This tool takes a sub-schema of the database
+and the question as input, and through LLM prompting,
+returns the tables that are necessary for answering the query.
+select columns To further narrow down the relevant schema
+items, the select columns tool can be used. By inputting a
+sub-schema and the question, the agent retrieves only the
+necessary columns.
+The SS agent can utilize these tools either individually or
+in combination, depending on its configuration. However,
+its actions involve a trade-off between precision and recall
+when selecting relevant schema items. Notably, when deal-
+ing with extremely large databases—containing over 4,000
+columns—this agent can significantly reduce irrelevant in-
+formation. A detailed discussion of the importance of SS
+agent is presented in Section 4.2.2.
+Candidate Generator (CG) The Candidate Generator (CG)
+is responsible for synthesizing SQL query that answers the
+question asked from the database. To accomplish this, the
+CG agent first calls the generate candidate query tool to
+generate candidate queries. It then executes these candidates
+on the database, checks the result, and identifies any faulty
+queries (those containing syntactic errors or empty result).
+For each faulty candidate, the agent repeatedly attempts to
+revise the query, until the issue is resolved or a maximum
+number of allowed revisions is reached.
+generate candidate query This tool generates a single can-
+didate query that answers the question. It takes the question,
+the schema, and the context (entities and descriptions) and
+prompts an LLM to follow a multi-step reasoning guideline
+to write a candidate SQL query.
+revise Sometimes, the generated candidate queries may con-
+tain syntax errors or produce empty result. In such cases,
+the agent identifies the issue by executing the queries on
+the database and then uses this tool to fix them. This tool
+takes the question, schema, context, the faulty query and a
+description of the issue as input. It then prompts an LLM
+with this information, asking it revise the query. Note that
+the issue description (or execution log) is critical in guiding
+the model, as it provides a direct signal of the query’s failure
+CHESS: Contextual Harnessing for Efficient SQL Synthesis
+point.
+Unit Tester (UT) The Unit Tester (UT) agent is responsible
+for selecting the most accurate SQL query from the pool of
+candidates generated by the CG agent. UT identifies the best
+candidate by 1) generating multiple unit tests that highlight
+differences between the candidate queries and 2) evaluating
+the candidates against these unit tests. It then assigns a score
+to each query based on the number of unit tests it passes,
+selecting the top-scoring candidate as the final SQL query
+for the given question.
+generate unit test This tool prompts an LLM to generate
+k unit tests, where k is an input parameter, designed such
+that only the correct SQL query can pass each of them. The
+prompt is carefully constructed to produce high-quality unit
+tests that highlight the semantic differences between the
+candidate queries. Detailed prompt used to generate unit
+tests is provided in Appendix C.
+evaluate After generating the unit tests, the UT agent eval-
+uates the candidate queries against them. This tool takes
+multiple candidate queries and a single unit test as input,
+prompting an LLM to reason through each candidate and
+determine whether it passes the unit test. While this tool
+could be implemented to evaluate a single candidate against
+multiple unit tests simultaneously, our experiments in Sec-
+tion 4.2.1 have shown that the current approach, evaluating
+multiple candidates against one unit test at a time, yields
+better results.
+
+Result Explainer (RE) The Result Explainer (RE) agent is
+responsible for transforming SQL query results into clear, 
+natural language explanations that non-technical users can
+easily understand. This agent bridges the gap between raw
+database output and meaningful insights, making the system
+accessible to business users and domain experts.
+
+explain results This tool takes the original question, SQL
+query, and execution results as input and generates a
+comprehensive natural language explanation. It analyzes
+the data to provide direct answers to the user's question,
+highlights key insights, patterns, and notable values, and
+presents the information in a conversational, user-friendly
+manner. For large result sets, only a sample of top rows
+is passed to the LLM to manage context size effectively.
+
+summarize large results When dealing with result sets that
+contain many rows (e.g., more than 50), this tool provides
+statistical summaries instead of row-by-row explanations.
+It computes basic statistics (min, max, average for numeric
+columns; unique counts for categorical columns) and uses
+representative samples to give users a comprehensive
+overview of the data without overwhelming them with
+details.
+
+split complex query Complex SQL queries with multiple
+JOINs can sometimes produce results that are difficult to
+interpret. This tool analyzes the query complexity and
+determines whether splitting the query into multiple simpler
+queries would improve interpretability. If splitting is
+recommended, each sub-query is executed and explained
+separately, then the results are combined into a coherent
+response. This approach ensures that users receive clear,
+actionable insights even from complex data relationships.
+
+3.2 Preprocessing
+To accelerate the IR agent’s tools, retrieve entity and re-
+trieve context, and improve their efficiency, we preprocess
+database values and catalogs before running the system. For
+database values, we perform a syntactic search by creating
+a Locality-Sensitive Hashing (LSH) index, as explained in
+retrieve entity. For database catalogs, which contain longer
+texts that require semantic understanding, we use a vector
+database retrieval method to measure semantic similarity.
+Locality Sensitive Hashing Indexing of Values. To opti-
+mize the entity retrieval process, we employ a method capa-
+ble of efficiently searching through large databases, which
+may contain millions of rows, to retrieve the most similar
+values. This process doesn’t require perfect accuracy but
+should return a reasonably small set of similar values, such
+as around a hundred elements. Locality Sensitive Hashing
+(LSH) is an effective technique for approximate nearest-
+neighbor searches, allowing us to retrieve database values
+most similar to a given keyword. During preprocessing,
+we index unique database values using LSH. Then, in the
+retrieve entity tool, we query this index to quickly find the
+top similar values for a keyword.
+Vector Database for Descriptions. Extracting the most
+semantically relevant pieces of information from database
+catalogs is crucial for generating accurate SQL queries.
+These catalogs can be extensive, with hundreds of pages
+explaining the entities and their relationships within the
+database, necessitating an efficient retrieval method. To
+enable a high-efficiency semantic similarity searches, we
+preprocess the database catalogs into a vector database. Dur-
+ing the context retrieval step, we query this vector database
+to find the most relevant information for the question at
+hand.
