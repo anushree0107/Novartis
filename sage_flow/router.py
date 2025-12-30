@@ -4,7 +4,7 @@ import re
 from typing import Optional
 from dataclasses import dataclass
 from enum import Enum
-from prompts import ROUTER_SYSTEM_PROMPT
+from sage_flow.prompts import ROUTER_SYSTEM_PROMPT
 
 
 class QueryIntent(Enum):

@@ -7,8 +7,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from router import IntentRouter, QueryIntent, RouterResult
-from merger import SmartMerger, MergerInput, MergedResult
+from sage_flow.router import IntentRouter, QueryIntent, RouterResult
+from sage_flow.merger import SmartMerger, MergerInput, MergedResult
 
 
 @dataclass

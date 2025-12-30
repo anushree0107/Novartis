@@ -1,7 +1,7 @@
 import json
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
-from prompts import MERGER_SYSTEM_PROMPT
+from sage_flow.prompts import MERGER_SYSTEM_PROMPT
 
 
 @dataclass
