@@ -1,201 +1,211 @@
-# CHESS Text-to-SQL for Clinical Trial Data
+# SAGE-Flow: SQL-Augmented Graph Execution Flow
 
-A multi-agent Text-to-SQL system based on the CHESS (Contextual Harnessing for Efficient SQL Synthesis) framework, designed for querying clinical trial data using natural language.
+A novel framework combining **Text2SQL** and **GraphRAG** for intelligent clinical trial data analysis.
 
-## Architecture
+## 🎯 The Problem
 
-The system uses 4 specialized agents, each with specific tools:
+| Approach | Strength | Weakness |
+|----------|----------|----------|
+| **SQL** | Precise aggregations, filtering, statistics | No context, relationships, or reasoning |
+| **Graph RAG** | Rich relationships, multi-hop reasoning | Struggles with "top N", exact counts |
 
-### 1. Information Retriever Agent (IR)
-Gathers relevant information from the database and question.
+**SAGE-Flow** combines both - routing queries to the optimal path and fusing results intelligently.
 
-**Tools:**
-- `extract_keywords` - Extracts key terms from natural language using LLM
-- `retrieve_entity` - Searches database values using LSH + edit distance
-- `retrieve_context` - Gets relevant schema descriptions from vector store
+---
 
-### 2. Schema Selector Agent (SS)
-Reduces schema size by selecting relevant tables and columns.
+## 🏗️ Architecture
 
-**Tools:**
-- `filter_column` - Determines column relevance using lightweight LLM
-- `select_tables` - Selects necessary tables for the query
-- `select_columns` - Narrows down to essential columns per table
-
-### 3. Candidate Generator Agent (CG)
-Generates and refines SQL query candidates.
-
-**Tools:**
-- `generate_candidate_query` - Generates SQL using multiple strategies (standard, chain-of-thought, decomposition)
-- `revise` - Fixes faulty queries based on execution errors
-
-### 4. Unit Tester Agent (UT)
-Selects the best SQL candidate using unit tests.
-
-**Tools:**
-- `generate_unit_test` - Creates tests to differentiate between candidates
-- `evaluate` - Evaluates candidates against unit tests
-
-## Preprocessing
-
-The system uses two preprocessing techniques for efficiency:
-
-1. **LSH (Locality Sensitive Hashing)** - Indexes database values for fast entity retrieval
-2. **Vector Database** - Stores schema descriptions for semantic similarity search
-
-## Installation
-
-```bash
-# Clone the repository
-cd Nova-text-to-sql
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy and configure environment variables
-cp .env.example .env
-# Edit .env with your Groq API key and PostgreSQL credentials
+```mermaid
+flowchart TB
+    subgraph Input
+        Q[/"🗣️ User Query"/]
+    end
+    
+    subgraph SAGE-Flow["🔮 SAGE-Flow Orchestrator"]
+        R{"🧭 Intent Router"}
+        
+        subgraph Agents["Parallel Agent Execution"]
+            direction LR
+            SQL["📊 Text2SQL Agent<br/>(CHESS Pipeline)"]
+            GRAPH["🕸️ GraphRAG Agent<br/>(HopRAG Engine)"]
+        end
+        
+        M["🔀 Smart Merger"]
+    end
+    
+    subgraph DataSources["Data Sources"]
+        DB[(PostgreSQL<br/>Clinical Data)]
+        KG[(Knowledge Graph<br/>424K nodes)]
+    end
+    
+    subgraph Output
+        A[/"📋 Unified Answer"/]
+    end
+    
+    Q --> R
+    
+    R -->|SQL_ONLY| SQL
+    R -->|GRAPH_ONLY| GRAPH
+    R -->|SQL_THEN_GRAPH| SQL
+    R -->|GRAPH_THEN_SQL| GRAPH
+    
+    SQL --> DB
+    GRAPH --> KG
+    
+    SQL --> M
+    GRAPH --> M
+    M --> A
+    
+    style R fill:#ff9800,stroke:#333
+    style SQL fill:#2196f3,stroke:#333
+    style GRAPH fill:#4caf50,stroke:#333
+    style M fill:#9c27b0,stroke:#333
 ```
 
-## Configuration
+---
 
-Edit `.env` file:
+## 🔄 Execution Flows
 
-```env
-# Groq API Key (get from https://console.groq.com/)
-GROQ_API_KEY=your_groq_api_key_here
-
-# PostgreSQL Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=clinical_trials
-DB_USER=postgres
-DB_PASSWORD=your_password
+### Flow 1: SQL Only
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant R as Router
+    participant S as Text2SQL
+    participant M as Merger
+    
+    U->>R: "How many trials in Phase 3?"
+    R->>S: SQL_ONLY
+    S->>S: Generate SQL
+    S->>S: Execute Query
+    S->>M: {rows: 42}
+    M->>U: "There are 42 Phase 3 trials"
 ```
 
-## Usage
-
-### 1. Setup (First Time)
-
-```bash
-# Load data and build indices
-python -m cli.main setup
+### Flow 2: Graph Only
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant R as Router
+    participant G as GraphRAG
+    participant M as Merger
+    
+    U->>R: "Explain safety issues at Site 637"
+    R->>G: GRAPH_ONLY
+    G->>G: HopRAG Multi-hop Traversal
+    G->>G: LLM Reasoning
+    G->>M: {narrative: "Site 637 has..."}
+    M->>U: Detailed safety analysis
 ```
 
-### 2. Query Data
-
-```bash
-# Single query
-python -m cli.main query "How many patients are in Study 1?"
-
-# With verbose output
-python -m cli.main query "Show sites with open queries" --verbose
-
-# Generate more candidates
-python -m cli.main query "Find missing visits" --candidates 5
+### Flow 3: SQL → Graph (Grounded Traversal)
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant R as Router
+    participant S as Text2SQL
+    participant G as GraphRAG
+    participant M as Merger
+    
+    U->>R: "Analyze safety in TOP 3 largest trials"
+    R->>S: Get top 3 trial IDs
+    S->>S: SELECT trial_id ORDER BY size LIMIT 3
+    S-->>G: [Trial_001, Trial_002, Trial_003]
+    G->>G: Traverse ONLY these 3 nodes
+    G->>M: Grounded analysis
+    S->>M: Precise IDs
+    M->>U: Combined answer (no hallucination!)
 ```
 
-### 3. Interactive Mode
-
-```bash
-python -m cli.main interactive
+### Flow 4: Graph → SQL (Semantic Expansion)
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant R as Router
+    participant G as GraphRAG
+    participant S as Text2SQL
+    participant M as Merger
+    
+    U->>R: "Count patients with headache conditions"
+    R->>G: Find related terms
+    G->>G: Ontology lookup
+    G-->>S: ["headache", "migraine", "cephalgia"]
+    S->>S: SELECT ... WHERE condition IN (expanded terms)
+    S->>M: Count: 847
+    G->>M: Semantic context
+    M->>U: "847 patients (including migraine, cephalgia)"
 ```
 
-### 4. Python API
+---
+
+## 📦 Project Structure
+
+```
+sage_flow/               # 🔮 Main SAGE-Flow Module
+├── orchestrator.py      # Entry point, parallel execution
+├── router.py            # Fast heuristics + LLM classification
+├── merger.py            # Trust hierarchy, conflict detection
+└── prompts.py           # LLM prompts
+
+graph_rag/               # 🕸️ GraphRAG Components
+├── agent.py             # LangChain ReAct agent
+├── hop_rag/             # Multi-hop reasoning engine
+│   ├── engine.py        # HopRAG core
+│   └── config.py        # Tunable parameters
+└── tools/               # Graph query tools
+
+pipeline/                # 📊 Text2SQL (CHESS)
+└── orchestrator.py      # 5-agent SQL pipeline
+
+agents/                  # CHESS SQL Agents
+├── information_retriever.py
+├── schema_selector.py
+├── candidate_generator.py
+├── unit_tester.py
+└── result_explainer.py
+```
+
+---
+
+## 🚀 Quick Start
 
 ```python
-from chess_sql import create_pipeline
+from sage_flow import create_sage_flow
 
-# Create pipeline
-pipeline = create_pipeline()
-
-# Run query
-result = pipeline.run("How many open queries are there by site?")
-
-# Access results
-print(result.sql)
-print(result.execution_result)
-print(result.summary())
+orchestrator = create_sage_flow(verbose=True)
+result = orchestrator.query("Which sites require immediate attention?")
+print(result.answer)
 ```
 
-## Project Structure
-
-```
-Nova-text-to-sql/
-├── agents/                     # Agent implementations
-│   ├── base_agent.py          # Base classes for agents and tools
-│   ├── information_retriever.py  # IR Agent
-│   ├── schema_selector.py     # SS Agent
-│   ├── candidate_generator.py # CG Agent
-│   └── unit_tester.py         # UT Agent
-├── config/
-│   └── settings.py            # Configuration settings
-├── database/
-│   ├── connection.py          # PostgreSQL connection manager
-│   ├── data_loader.py         # Excel to PostgreSQL loader
-│   └── schema_manager.py      # Schema extraction and caching
-├── preprocessing/
-│   └── indexer.py             # LSH and Vector DB indices
-├── pipeline/
-│   └── orchestrator.py        # Pipeline coordinator
-├── cli/
-│   └── main.py                # Command-line interface
-├── utils/
-│   ├── llm_client.py          # Groq API client
-│   └── token_utils.py         # Token counting utilities
-├── chess_sql.py               # Main entry point
-├── requirements.txt
-└── README.md
+```bash
+cd sage_flow && python orchestrator.py
 ```
 
-## Clinical Trial Data Categories
+---
 
-The system handles these data categories:
-- **visit** - Patient visit tracking and projections
-- **query** - Data queries and EDRR metrics
-- **safety** - eSAE and safety data
-- **coding** - Medical coding (MedDRA, WHODD)
-- **lab** - Laboratory data and reconciliation
-- **edc_metrics** - EDC performance metrics
-- **forms** - Form status (frozen, locked, signed)
-- **pages** - Missing pages reports
+## ⚡ Performance
 
-## Example Queries
+| Metric | Value |
+|--------|-------|
+| Routing | ~1s |
+| SQL | ~0.5s |
+| Graph | 3-8s |
+| **Total** | **5-15s** |
 
-```
-# Patient/Site Queries
-"How many patients are in Study 5?"
-"Which sites have the most missing visits?"
-"Show patient enrollment by region"
+---
 
-# Data Quality Queries
-"How many open queries are there?"
-"Which sites have non-conformant data?"
-"Show query resolution rates by site"
+## 🔧 Configuration
 
-# Safety Queries
-"List eSAE events by study"
-"Which patients have adverse events?"
-
-# Aggregation Queries
-"Show missing visit percentages by site"
-"Calculate clean patient rates"
+Edit `graph_rag/hop_rag/config.py`:
+```python
+@dataclass
+class HopRAGConfig:
+    n_hops: int = 3                    # Traversal depth
+    use_llm_reasoning: bool = True     # Enable LLM for edge selection
+    max_llm_calls_per_query: int = 5   # LLM call budget
+    fast_mode_threshold: float = 0.9   # Skip LLM if high confidence
 ```
 
-## Token Optimization
+---
 
-The system implements several token optimization strategies:
-1. **Keyword extraction** - Only relevant terms are used for retrieval
-2. **Schema filtering** - Only necessary tables/columns included
-3. **Progressive detail** - Compact to detailed schema as needed
-4. **Batched filtering** - Column filtering in batches
-
-## Models Used
-
-The system uses Groq's LLM models:
-- `llama-3.3-70b-versatile` - For SQL generation and complex reasoning
-- `llama-3.1-8b-instant` - For fast evaluation and filtering tasks
-
-## License
-
-MIT License
+*SAGE-Flow: Combining the precision of SQL with the intelligence of Graphs.*

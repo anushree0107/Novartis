@@ -1,7 +1,3 @@
-"""
-CHESS Text-to-SQL CLI Interface
-Command-line interface for the clinical trial data query system
-"""
 import sys
 import os
 
@@ -29,10 +25,6 @@ console = Console()
 
 @app.command()
 def setup():
-    """
-    Setup the database and preprocessing indices.
-    Run this first before querying.
-    """
     console.print(Panel.fit(
         "[bold blue]CHESS Text-to-SQL Setup[/bold blue]\n"
         "This will load data and build indices.",

@@ -1,35 +1,36 @@
 # Core LangChain & LangGraph
-langchain>=1.2.0
-langchain-core>=1.2.5
+langchain>=0.3.0
+langchain-core>=0.3.0
 langchain-groq>=0.3.0
-langchain-google-genai>=4.1.2
-langgraph>=1.0.5
-langgraph-prebuilt>=1.0.5
+langchain-google-genai>=2.0.0
+langgraph>=0.2.0
+langgraph-prebuilt>=0.1.0
 
 # Data Processing
 pandas>=2.0.0
 networkx>=3.0
+openpyxl>=3.1.0
 
 # Environment
 python-dotenv>=1.0.0
-# Core dependencies
-python-dotenv==1.0.0
-groq==0.4.2
-pandas==2.1.4
-openpyxl==3.1.2
-psycopg2-binary==2.9.9
-sqlalchemy==2.0.23
+
+# Database
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.0
+
+# Groq SDK (compatible with langchain-groq)
+groq>=0.30.0
 
 # For token optimization
-tiktoken==0.5.2
+tiktoken>=0.5.0
 
 # For better CLI
-rich==13.7.0
-typer==0.9.0
+rich>=13.0.0
+typer>=0.9.0
 
 # For API (optional)
-fastapi==0.109.0
-uvicorn==0.25.0
+fastapi>=0.109.0
+uvicorn>=0.25.0
 
 # For testing
-pytest==7.4.3
+pytest>=7.4.0

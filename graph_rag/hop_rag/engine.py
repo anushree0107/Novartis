@@ -19,6 +19,7 @@ class HopRAGEngine:
         self.config = config or HopRAGConfig()
         self._node_index = self._build_node_index()
         self._pseudo_query_cache: Dict[str, Dict[str, List[str]]] = {}
+        self._llm_call_count = 0  # Track LLM calls
         self._setup_logging()
     
     def _setup_logging(self):
@@ -275,17 +276,20 @@ class HopRAGEngine:
         from concurrent.futures import ThreadPoolExecutor, as_completed
         from .prompts import BATCH_EDGE_REASONING_PROMPT
         
+        batch_call_count = 0  # Track calls in this batch
+        
         def process_batch(chunk_tasks):
+            nonlocal batch_call_count
             try:
                 prompt_text = BATCH_EDGE_REASONING_PROMPT.format(
                     query=query,
                     tasks_text="\n\n".join(chunk_tasks)
                 )
-                logger.debug(f"Batch reasoning for {len(chunk_tasks)} nodes (parallel)")
+                batch_call_count += 1
+                logger.info(f"🔹 LLM Call #{self._llm_call_count + batch_call_count}: Batch reasoning for {len(chunk_tasks)} nodes")
                 response = self.llm.invoke(prompt_text)
                 content = response.content if hasattr(response, 'content') else str(response)
                 
-                # Clean and parse JSON
                 content = content.replace("```json", "").replace("```", "").strip()
                 idx_start = content.find("{")
                 idx_end = content.rfind("}")
@@ -297,14 +301,15 @@ class HopRAGEngine:
                 logger.error(f"Batch reasoning failed: {e}")
                 return {}
         
-        # Execute batches in parallel
-        # Max workers = 5 to perform significantly faster than sequential
         with ThreadPoolExecutor(max_workers=5) as executor:
             future_to_batch = {executor.submit(process_batch, batch): batch for batch in batches}
             for future in as_completed(future_to_batch):
                 batch_res = future.result()
                 if batch_res:
                     results.update(batch_res)
+        
+        self._llm_call_count += batch_call_count
+        logger.info(f"📊 Total LLM calls so far: {self._llm_call_count}")
         
         return results
 
@@ -315,7 +320,15 @@ class HopRAGEngine:
         visited: Set[str] = set(r.node_id for r in start_nodes)
         visit_counter: Dict[str, HopResult] = {r.node_id: r for r in start_nodes}
         
+        # FAST-MODE: Skip LLM if high-confidence matches already found
+        if self.config.fast_mode:
+            high_confidence = [r for r in start_nodes if r.similarity_score >= self.config.fast_mode_threshold]
+            if len(high_confidence) >= self.config.early_termination_count:
+                logger.info(f"FAST-MODE: {len(high_confidence)} high-confidence matches found, skipping LLM traversal")
+                return visit_counter
+        
         current_layer = start_nodes
+        llm_calls_made = 0
         
         for hop_idx in range(n_hops):
             logger.info(f"Processing Hop {hop_idx + 1}/{n_hops} with {len(current_layer)} nodes")
@@ -344,8 +357,18 @@ class HopRAGEngine:
             if not layer_candidates:
                 break
             
-            # 2. Batch reason about best edges
-            decisions = self.reason_batch_edges_llm(query, layer_candidates)
+            # 2. Check LLM call budget
+            if llm_calls_made >= self.config.max_llm_calls_per_query:
+                logger.info(f"LLM call budget exhausted ({llm_calls_made}), using heuristic expansion")
+                # Heuristic: just take first neighbor of each node (fast fallback)
+                decisions = {}
+                for node_id, candidates in layer_candidates.items():
+                    if candidates:
+                        decisions[node_id] = candidates[0][0]  # First neighbor
+            else:
+                # 2. Batch reason about best edges (LLM)
+                decisions = self.reason_batch_edges_llm(query, layer_candidates)
+                llm_calls_made += 1
             
             # 3. Process decisions and expand
             next_layer = []
@@ -427,8 +450,18 @@ class HopRAGEngine:
         top_k = top_k or self.config.top_k
         n_hops = n_hops or self.config.n_hops
         
+        # Reset LLM call counter for this query
+        self._llm_call_count = 0
+        
         logger.info(f"=== HopRAG Pipeline Start ===")
         logger.info(f"Query: {query[:80]}...")
+        
+        # ULTRA-FAST: Skip all LLM reasoning if configured
+        if self.config.skip_multi_hop or not self.config.use_llm_reasoning:
+            logger.info("ULTRA-FAST MODE: Skipping LLM traversal, using keyword retrieval only")
+            initial_results = self.initial_retrieve(query, top_k=top_k * 2)
+            logger.info(f"=== HopRAG Pipeline Complete (FAST): {len(initial_results)} results, 0 LLM calls ===")
+            return initial_results[:top_k]
         
         self._init_llm()
         
@@ -441,7 +474,7 @@ class HopRAGEngine:
         scored_results = self.compute_helpfulness(query, all_results)
         final_results = self.prune_results(scored_results, top_k=top_k)
         
-        logger.info(f"=== HopRAG Pipeline Complete: {len(final_results)} results ===")
+        logger.info(f"=== HopRAG Pipeline Complete: {len(final_results)} results, {self._llm_call_count} LLM calls ===")
         return final_results
     
     def format_results_for_context(self, results: List[HopResult]) -> str:
