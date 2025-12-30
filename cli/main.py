@@ -92,13 +92,15 @@ def setup():
 @app.command()
 def query(
     question: str = typer.Argument(..., help="Natural language question about the clinical trial data"),
-    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed agent output"),
-    execute: bool = typer.Option(True, "--execute/--no-execute", help="Execute the generated SQL"),
-    candidates: int = typer.Option(3, "--candidates", "-c", help="Number of SQL candidates"),
-    tests: int = typer.Option(5, "--tests", "-t", help="Number of unit tests")
+    verbose: bool = typer.Option(False, help="Show detailed agent output"),
+    execute: bool = typer.Option(True, help="Execute the generated SQL"),
+    explain: bool = typer.Option(True, help="Generate natural language explanation of results"),
+    candidates: int = typer.Option(3, help="Number of SQL candidates"),
+    tests: int = typer.Option(5, help="Number of unit tests")
 ):
     """
     Query the clinical trial database using natural language.
+    Use --no-explain to skip the natural language explanation.
     """
     from pipeline.orchestrator import create_pipeline
     
@@ -126,7 +128,8 @@ def query(
             question=question,
             num_candidates=candidates,
             num_unit_tests=tests,
-            execute_result=execute
+            execute_result=execute,
+            explain_result=explain
         )
     
     # Display results
@@ -150,6 +153,18 @@ def query(
                     table.add_row(*[str(v)[:50] if v else "NULL" for v in row.values()])
                 
                 console.print(table)
+                
+                if row_count > 10:
+                    console.print(f"[dim]... and {row_count - 10} more rows[/dim]")
+            
+            # Display natural language explanation
+            if explain and result.explanation:
+                console.print("\n" + "="*60)
+                console.print(Panel.fit(
+                    result.explanation,
+                    title="[bold green]📊 Answer[/bold green]",
+                    border_style="green"
+                ))
         elif result.execution_result:
             console.print(f"\n[yellow]Execution error: {result.execution_result.get('error')}[/yellow]")
     else:
@@ -251,6 +266,14 @@ Just type your question to query the database!
                         
                         if row_count > 5:
                             console.print(f"[dim]... and {row_count - 5} more rows[/dim]")
+                        
+                        # Show explanation in interactive mode
+                        if result.explanation:
+                            console.print(Panel.fit(
+                                result.explanation,
+                                title="[bold green]📊 Answer[/bold green]",
+                                border_style="green"
+                            ))
             else:
                 console.print(f"[red]Error: {result.error}[/red]")
                 

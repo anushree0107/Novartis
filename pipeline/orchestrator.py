@@ -1,6 +1,6 @@
 """
 CHESS Pipeline Orchestrator
-Coordinates all 4 agents in sequence for Text-to-SQL synthesis
+Coordinates all 5 agents in sequence for Text-to-SQL synthesis
 """
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
@@ -11,6 +11,7 @@ from agents import (
     SchemaSelectorAgent,
     CandidateGeneratorAgent,
     UnitTesterAgent,
+    ResultExplainerAgent,
     AgentResult
 )
 from database.connection import DatabaseManager, db_manager
@@ -28,11 +29,15 @@ class PipelineResult:
     question: str
     execution_result: Dict = None
     
+    # Natural language explanation
+    explanation: str = None
+    
     # Agent results for transparency
     ir_result: AgentResult = None
     ss_result: AgentResult = None
     cg_result: AgentResult = None
     ut_result: AgentResult = None
+    re_result: AgentResult = None
     
     # Metrics
     total_tokens: int = 0
@@ -60,6 +65,13 @@ class PipelineResult:
             if self.execution_result.get('columns'):
                 lines.append(f"  Columns: {self.execution_result['columns']}")
         
+        # Add natural language explanation
+        if self.explanation:
+            lines.append(f"\n{'='*60}")
+            lines.append("📊 ANSWER:")
+            lines.append(f"{'='*60}")
+            lines.append(self.explanation)
+        
         lines.extend([
             f"\nMetrics:",
             f"  Total Tokens: {self.total_tokens}",
@@ -74,6 +86,8 @@ class PipelineResult:
             lines.append(f"  CG Agent: {self.cg_result.execution_time:.2f}s, {self.cg_result.tokens_used} tokens")
         if self.ut_result:
             lines.append(f"  UT Agent: {self.ut_result.execution_time:.2f}s, {self.ut_result.tokens_used} tokens")
+        if self.re_result:
+            lines.append(f"  RE Agent: {self.re_result.execution_time:.2f}s, {self.re_result.tokens_used} tokens")
         
         if self.error:
             lines.append(f"\nError: {self.error}")
@@ -87,11 +101,12 @@ class CHESSPipeline:
     """
     CHESS Text-to-SQL Pipeline
     
-    Orchestrates 4 agents:
+    Orchestrates 5 agents:
     1. Information Retriever (IR) - Extracts keywords, entities, context
     2. Schema Selector (SS) - Selects relevant tables and columns
     3. Candidate Generator (CG) - Generates and refines SQL candidates
     4. Unit Tester (UT) - Selects best candidate via unit tests
+    5. Result Explainer (RE) - Explains results in natural language
     """
     
     def __init__(
@@ -128,6 +143,7 @@ class CHESSPipeline:
         self.ss_agent = SchemaSelectorAgent(self.llm, self.schema)
         self.cg_agent = CandidateGeneratorAgent(self.llm, self.db)
         self.ut_agent = UnitTesterAgent(self.llm, self.db)
+        self.re_agent = ResultExplainerAgent(self.llm, self.db)
     
     def log(self, message: str, level: str = "info"):
         """Log pipeline progress"""
@@ -146,7 +162,8 @@ class CHESSPipeline:
         question: str,
         num_candidates: int = 3,
         num_unit_tests: int = 5,
-        execute_result: bool = True
+        execute_result: bool = True,
+        explain_result: bool = True
     ) -> PipelineResult:
         """
         Run the complete CHESS pipeline
@@ -156,6 +173,7 @@ class CHESSPipeline:
             num_candidates: Number of SQL candidates to generate
             num_unit_tests: Number of unit tests for selection
             execute_result: Whether to execute final SQL
+            explain_result: Whether to generate natural language explanation
             
         Returns:
             PipelineResult with generated SQL and metadata
@@ -264,6 +282,32 @@ class CHESSPipeline:
             else:
                 self.log(f"Execution failed: {execution_result.get('error', 'Unknown')}", "warning")
         
+        # ========== Stage 5: Result Explainer ==========
+        re_result = None
+        explanation = None
+        schema_context = ss_result.data.get('schema_text', '') if ss_result and ss_result.data else ''
+        
+        if explain_result and execution_result and execution_result.get('success') and best_sql:
+            self.log("Stage 5: Result Explainer", "step")
+            
+            re_result = self.re_agent.execute(
+                question=question,
+                sql=best_sql,
+                execution_result=execution_result,
+                schema_context=schema_context
+            )
+            total_tokens += re_result.tokens_used
+            
+            if re_result.success:
+                explanation = re_result.data.get('explanation', '')
+                self.log(f"RE complete: Generated explanation", "success")
+                
+                # Handle split queries if any
+                if re_result.data.get('is_split'):
+                    self.log(f"Query was split into {len(re_result.data.get('split_queries', []))} parts", "info")
+            else:
+                self.log(f"RE failed: {re_result.error}", "warning")
+        
         total_time = time.time() - start_time
         self.log(f"Pipeline complete in {total_time:.2f}s", "success")
         
@@ -272,23 +316,25 @@ class CHESSPipeline:
             sql=best_sql,
             question=question,
             execution_result=execution_result,
+            explanation=explanation,
             ir_result=ir_result,
             ss_result=ss_result,
             cg_result=cg_result,
             ut_result=ut_result,
+            re_result=re_result,
             total_tokens=total_tokens,
             total_time=total_time
         )
     
     def quick_query(self, question: str) -> Dict[str, Any]:
         """
-        Quick query mode - simplified output
+        Quick query mode - simplified output with natural language explanation
         
         Args:
             question: Natural language question
             
         Returns:
-            Dict with sql, success, data, and error
+            Dict with sql, success, data, explanation, and error
         """
         result = self.run(question, execute_result=True)
         
@@ -298,6 +344,7 @@ class CHESSPipeline:
             'data': result.execution_result.get('data', []) if result.execution_result else [],
             'columns': result.execution_result.get('columns', []) if result.execution_result else [],
             'row_count': result.execution_result.get('row_count', 0) if result.execution_result else 0,
+            'explanation': result.explanation,
             'error': result.error
         }
 

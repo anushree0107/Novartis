@@ -12,7 +12,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 # LLM Models - Using Groq's available models
 MODELS = {
     "schema_selector": "llama-3.3-70b-versatile",  # For schema selection
-    "sql_generator": "llama-3.3-70b-versatile",    # For SQL generation
+    "sql_generator": "llama-3.3-70b-versatile",        # For SQL generation (GPT OSS 120B via Groq)
     "sql_refiner": "llama-3.3-70b-versatile",      # For SQL refinement
     "evaluator": "llama-3.1-8b-instant"            # For quick evaluation (faster model)
 }

@@ -296,7 +296,8 @@ Your job is to gather all relevant information needed to answer questions about 
             "relevant_tables": self._identify_relevant_tables(
                 keywords_data,
                 entity_result.data if entity_result.success else {},
-                context_result.data if context_result.success else {}
+                context_result.data if context_result.success else {},
+                question=question
             )
         }
         
@@ -316,10 +317,23 @@ Your job is to gather all relevant information needed to answer questions about 
         self,
         keywords_data: Dict,
         entity_data: Dict,
-        context_data: Dict
+        context_data: Dict,
+        question: str = ""
     ) -> List[str]:
         """Identify relevant tables from all gathered information"""
         tables = set()
+        
+        # Check for meta-questions about the database itself
+        question_lower = question.lower() if question else ""
+        meta_keywords = ['how many studies', 'number of studies', 'count studies', 
+                        'list studies', 'all studies', 'which studies', 'what studies',
+                        'total studies', 'studies are there', 'studies exist',
+                        'how many tables', 'database info', 'database structure']
+        
+        if any(mk in question_lower for mk in meta_keywords):
+            # Add metadata tables for meta-questions
+            tables.add('_studies')
+            tables.add('_table_metadata')
         
         # From entity matches
         for keyword, matches in entity_data.get('matched_entities', {}).items():

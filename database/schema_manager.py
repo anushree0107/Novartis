@@ -142,7 +142,9 @@ class SchemaManager:
         table_names = self.db.get_all_tables()
         
         for table_name in table_names:
-            if table_name.startswith('_'):  # Skip metadata tables
+            # Handle metadata tables specially
+            if table_name.startswith('_'):
+                self._add_metadata_table(table_name)
                 continue
                 
             columns_data = self.db.get_table_columns(table_name)
@@ -194,6 +196,33 @@ class SchemaManager:
         
         self._save_cache()
         return len(self.tables)
+    
+    def _add_metadata_table(self, table_name: str):
+        """Add metadata/system tables with proper descriptions"""
+        # Define descriptions for known metadata tables
+        metadata_descriptions = {
+            '_table_metadata': 'System table containing metadata about all loaded tables including study number, category, row count, and column list. Use this to query information ABOUT the database structure.',
+            '_studies': 'Summary table of all clinical studies in the database. Contains study_number, table_count, and total_rows for each study. USE THIS TABLE to answer questions about how many studies exist or study-level statistics.'
+        }
+        
+        columns_data = self.db.get_table_columns(table_name)
+        columns = [
+            ColumnInfo(
+                name=col['column_name'],
+                data_type=col['data_type'],
+                is_nullable=col['is_nullable'] == 'YES',
+                sample_values=[]
+            )
+            for col in columns_data
+        ]
+        
+        self.tables[table_name] = TableInfo(
+            name=table_name,
+            columns=columns,
+            row_count=self.db.get_table_row_count(table_name),
+            category='metadata',
+            description=metadata_descriptions.get(table_name, 'System metadata table')
+        )
     
     def get_table_info(self, table_name: str) -> Optional[TableInfo]:
         """Get information for a specific table"""
