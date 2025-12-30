@@ -1,0 +1,21 @@
+# Core# LLM Providers
+openai>=1.0.0
+google-generativeai>=0.3.0
+anthropic>=0.5.0
+groq>=0.4.0
+psycopg2-binary>=2.9.0
+sqlparse>=0.4.4
+python-dotenv>=1.0.0
+
+# Data processing
+pandas>=2.0.0
+openpyxl>=3.1.0  # For reading Excel files
+
+# CLI and utilities
+click>=8.0.0
+rich>=13.0.0  # Pretty console output
+tabulate>=0.9.0  # Table formatting
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
