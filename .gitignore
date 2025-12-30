@@ -1,3 +1,8 @@
+Data/*.zip
+*.zip
+myenv/
+__pycache__
+clinical_trial_graph.graphml
 # Environment variables - NEVER commit these
 .env
 .env.local
