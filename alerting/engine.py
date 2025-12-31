@@ -94,7 +94,7 @@ class AlertEngine:
             try:
                 from langchain_groq import ChatGroq
                 self.llm = ChatGroq(
-                    model="llama-3.1-8b-instant",
+                    model="qwen/qwen3-32b",
                     temperature=0.2,
                     groq_api_key=os.getenv("GROQ_API_KEY")
                 )

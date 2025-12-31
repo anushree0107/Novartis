@@ -62,7 +62,7 @@ class DQIExplainer:
             try:
                 from langchain_groq import ChatGroq
                 self.llm = ChatGroq(
-                    model="llama-3.3-70b-versatile",
+                    model="qwen/qwen3-32b",
                     temperature=0.3,
                     groq_api_key=os.getenv("GROQ_API_KEY")
                 )

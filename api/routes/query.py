@@ -15,6 +15,7 @@ class QueryResponse(BaseModel):
     question: str
     intent: str
     answer: str
+    thought_process: Optional[str] = None
     execution_order: str
     timing: Dict[str, float]
     success: bool
@@ -34,6 +35,32 @@ async def query(request: QueryRequest):
         orchestrator = get_orchestrator()
         result = orchestrator.query(request.question)
         
+        # Handle dictionary response from SAGEAgent
+        if isinstance(result, dict):
+            raw_output = result.get("output", "")
+            thought = None
+            answer = raw_output
+            
+            # Extract thinking process if present
+            if "<think>" in raw_output and "</think>" in raw_output:
+                start = raw_output.find("<think>")
+                end = raw_output.find("</think>")
+                thought = raw_output[start + 7 : end].strip()
+                answer = raw_output[end + 8:].strip()
+            
+            return QueryResponse(
+                question=request.question,
+                intent="query", # Default intent
+                answer=answer,
+                thought_process=thought,
+                execution_order="graph_rag",
+                timing={
+                    "total": 0.0 # Timing not exposed in new agent
+                },
+                success=not result.get("error", False)
+            )
+            
+        # Fallback for object-based response (legacy)
         return QueryResponse(
             question=request.question,
             intent=result.intent.value if hasattr(result.intent, 'value') else str(result.intent),
