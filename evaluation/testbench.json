@@ -51,7 +51,7 @@
       "id": 5,
       "difficulty": "easy",
       "category": "count",
-      "question": "How many MedDRA coding records are there for Study 10?",
+      "question": "How many MedDRA coding records (don't need to be distinct) are there for Study 10?",
       "expected_answer": 796,
       "answer_type": "single_value",
       "notes": "Total count from meddra table"
@@ -79,7 +79,7 @@
       "id": 8,
       "difficulty": "easy",
       "category": "count",
-      "question": "How many patients are from USA in Study 10?",
+      "question": "How many distinct patients are from USA in Study 10?",
       "expected_answer": 45,
       "answer_type": "single_value",
       "notes": "Filter by country and count"

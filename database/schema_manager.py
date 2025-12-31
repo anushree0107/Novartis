@@ -111,8 +111,33 @@ class SchemaManager:
                             study_number=table_data.get('study_number', ''),
                             description=table_data.get('description', '')
                         )
+                # Apply descriptions from config file
+                self._apply_descriptions()
             except Exception as e:
                 print(f"Warning: Could not load schema cache: {e}")
+    
+    def _apply_descriptions(self):
+        """Apply table and column descriptions from config/table_descriptions.json"""
+        desc_path = Path(__file__).parent.parent / "config" / "table_descriptions.json"
+        if not desc_path.exists():
+            return
+        
+        try:
+            with open(desc_path, 'r') as f:
+                descriptions = json.load(f)
+            
+            for table_name, desc_info in descriptions.items():
+                if table_name in self.tables:
+                    # Apply table description
+                    self.tables[table_name].description = desc_info.get('description', '')
+                    
+                    # Apply column descriptions
+                    col_descs = desc_info.get('columns', {})
+                    for col in self.tables[table_name].columns:
+                        if col.name in col_descs:
+                            col.description = col_descs[col.name]
+        except Exception as e:
+            print(f"Warning: Could not load table descriptions: {e}")
     
     def _save_cache(self):
         """Save schema to cache"""

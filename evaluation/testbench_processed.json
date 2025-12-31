@@ -1,0 +1,151 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "created": "2025-12-31",
+    "description": "Text-to-SQL evaluation testbench for processed clinical trial data",
+    "total_questions": 15,
+    "schema": "processed_data (8 tables)",
+    "difficulty_distribution": {
+      "easy": 10,
+      "medium": 5
+    }
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "difficulty": "easy",
+      "category": "count",
+      "question": "How many studies are there in the database?",
+      "expected_answer": 22,
+      "answer_type": "single_value",
+      "notes": "Count distinct studies from study_metrics"
+    },
+    {
+      "id": 2,
+      "difficulty": "easy",
+      "category": "count",
+      "question": "How many MedDRA coding records are there for Study 10?",
+      "expected_answer": 796,
+      "answer_type": "single_value",
+      "notes": "COUNT(*) from meddra_processed WHERE study='Study 10'"
+    },
+    {
+      "id": 3,
+      "difficulty": "easy",
+      "category": "count",
+      "question": "How many WHO Drug coding records are there for Study 10?",
+      "expected_answer": 568,
+      "answer_type": "single_value",
+      "notes": "COUNT(*) from whodd_processed WHERE study='Study 10'"
+    },
+    {
+      "id": 4,
+      "difficulty": "easy",
+      "category": "lookup",
+      "question": "Which study has the most total issues?",
+      "expected_answer": "Study 16",
+      "answer_type": "single_value",
+      "notes": "MAX(total_issues) from study_metrics"
+    },
+    {
+      "id": 5,
+      "difficulty": "easy",
+      "category": "count",
+      "question": "How many total issues does Study 10 have?",
+      "expected_answer": 3,
+      "answer_type": "single_value",
+      "notes": "total_issues from study_metrics WHERE study='Study 10'"
+    },
+    {
+      "id": 6,
+      "difficulty": "easy",
+      "category": "count",
+      "question": "How many missing pages are there for Study 10?",
+      "expected_answer": 42,
+      "answer_type": "single_value",
+      "notes": "COUNT(*) from missing_pages_processed"
+    },
+    {
+      "id": 7,
+      "difficulty": "easy",
+      "category": "count",
+      "question": "How many overdue visits are there for Study 10?",
+      "expected_answer": 6,
+      "answer_type": "single_value",
+      "notes": "COUNT(*) from visit_projection_processed"
+    },
+    {
+      "id": 8,
+      "difficulty": "easy",
+      "category": "count",
+      "question": "How many subjects have open issues in Study 10?",
+      "expected_answer": 3,
+      "answer_type": "single_value",
+      "notes": "COUNT(*) from edrr_processed WHERE study='Study 10'"
+    },
+    {
+      "id": 9,
+      "difficulty": "easy",
+      "category": "aggregation",
+      "question": "What is the total number of MedDRA records across all studies?",
+      "expected_answer": 66858,
+      "answer_type": "single_value",
+      "notes": "COUNT(*) from meddra_processed"
+    },
+    {
+      "id": 10,
+      "difficulty": "easy",
+      "category": "aggregation",
+      "question": "What is the total number of WHO Drug records across all studies?",
+      "expected_answer": 306702,
+      "answer_type": "single_value",
+      "notes": "COUNT(*) from whodd_processed"
+    },
+    {
+      "id": 11,
+      "difficulty": "medium",
+      "category": "ranking",
+      "question": "Which 3 studies have the most MedDRA records?",
+      "expected_answer": ["Study 21", "Study 22", "Study 17"],
+      "answer_type": "ordered_list",
+      "notes": "GROUP BY study ORDER BY COUNT DESC LIMIT 3"
+    },
+    {
+      "id": 12,
+      "difficulty": "medium",
+      "category": "comparison",
+      "question": "Does Study 10 have more MedDRA records or WHO Drug records?",
+      "expected_answer": "MedDRA",
+      "answer_type": "comparison",
+      "notes": "Compare 796 vs 568"
+    },
+    {
+      "id": 13,
+      "difficulty": "medium",
+      "category": "aggregation",
+      "question": "What is the average number of issues per study?",
+      "expected_answer": 94.5,
+      "answer_type": "single_value",
+      "tolerance": 1.0,
+      "notes": "AVG(total_issues) from study_metrics"
+    },
+    {
+      "id": 14,
+      "difficulty": "medium",
+      "category": "filter",
+      "question": "How many studies have more than 100 total issues?",
+      "expected_answer": 6,
+      "answer_type": "single_value",
+      "notes": "COUNT WHERE total_issues > 100"
+    },
+    {
+      "id": 15,
+      "difficulty": "medium",
+      "category": "aggregation",
+      "question": "What is the total number of eSAE records in the database?",
+      "expected_answer": 17098,
+      "answer_type": "single_value",
+      "notes": "COUNT(*) from esae_dashboard_processed"
+    }
+  ]
+}

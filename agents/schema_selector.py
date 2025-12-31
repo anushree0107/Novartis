@@ -432,7 +432,7 @@ Your job is to select the minimal set of tables and columns needed to answer a q
         )
     
     def _build_tables_schema(self, table_names: List[str]) -> str:
-        """Build schema description for candidate tables"""
+        """Build schema description for candidate tables WITH descriptions"""
         lines = []
         
         for table_name in table_names:
@@ -440,12 +440,16 @@ Your job is to select the minimal set of tables and columns needed to answer a q
             if not table_info:
                 continue
             
-            # Compact representation
+            # Compact representation with columns
             col_names = [f"{c.name}({c.data_type[:8]})" for c in table_info.columns[:10]]
             if len(table_info.columns) > 10:
                 col_names.append(f"+{len(table_info.columns) - 10} more")
             
             lines.append(f"TABLE {table_name} [{table_info.row_count} rows]: {', '.join(col_names)}")
+            
+            # ADD DESCRIPTION - This is critical for table selection!
+            if table_info.description:
+                lines.append(f"  Description: {table_info.description}")
             
             if table_info.category:
                 lines.append(f"  Category: {table_info.category}")
@@ -468,16 +472,24 @@ Your job is to select the minimal set of tables and columns needed to answer a q
             if not table_info:
                 continue
             
+            # Include table description as comment
+            if table_info.description:
+                lines.append(f"-- {table_name}: {table_info.description[:200]}")
+            
             lines.append(f"CREATE TABLE {table_name} (")
             
             for col in table_info.columns:
                 if col.name in columns:
                     nullable = "NULL" if col.is_nullable else "NOT NULL"
-                    sample_hint = ""
+                    # Include column description and sample values
+                    hints = []
+                    if col.description:
+                        hints.append(col.description[:50])
                     if col.sample_values:
                         samples = [str(v)[:25] for v in col.sample_values[:2]]
-                        sample_hint = f"  -- e.g., {', '.join(samples)}"
-                    lines.append(f"    {col.name} {col.data_type} {nullable},{sample_hint}")
+                        hints.append(f"e.g., {', '.join(samples)}")
+                    hint_str = f"  -- {'; '.join(hints)}" if hints else ""
+                    lines.append(f"    {col.name} {col.data_type} {nullable},{hint_str}")
             
             if lines[-1].endswith(','):
                 lines[-1] = lines[-1][:-1]
