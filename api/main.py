@@ -7,7 +7,6 @@ from contextlib import asynccontextmanager
 _sage_flow = None
 _graph = None
 _dqi_calculator = None
-_alert_engine = None
 _benchmark_engine = None
 _ranking_engine = None
 _report_generator = None
@@ -16,7 +15,7 @@ _action_executor = None
 
 def initialize_all():
     """Initialize all SAGE-Flow components at startup."""
-    global _sage_flow, _graph, _dqi_calculator, _alert_engine
+    global _sage_flow, _graph, _dqi_calculator
     global _benchmark_engine, _ranking_engine, _report_generator, _action_executor
     
     print("🔮 Initializing SAGE-Code Clinical Intelligence Platform...")
@@ -32,21 +31,13 @@ def initialize_all():
         
     # Initialize DQI Calculator
     try:
-        from intelligence.dqi import DQICalculator
-        if _graph:
-            _dqi_calculator = DQICalculator(_graph)
-            print("✅ DQI Engine initialized")
-    except ImportError:
-        print("⚠️ Legacy DQI Engine not found")
+        from analytics.dqi import DQICalculator
+        _dqi_calculator = DQICalculator()
+        print("✅ DQI Engine initialized")
+    except ImportError as e:
+        print(f"⚠️ DQI Engine not found: {e}")
         
-    # Initialize Alert Engine
-    try:
-        from alerting import AlertEngine
-        if _graph and _dqi_calculator:
-            _alert_engine = AlertEngine(_graph, dqi_calculator=_dqi_calculator)
-            print("✅ Alert Engine initialized")
-    except ImportError:
-        print("⚠️ Alert Engine not found")
+    # Alert Engine removed - not needed
         
     # Initialize Analytics
     try:
@@ -66,8 +57,7 @@ def initialize_all():
                 graph=_graph,
                 dqi_calculator=_dqi_calculator,
                 benchmark_engine=_benchmark_engine,
-                ranking_engine=_ranking_engine,
-                alert_engine=_alert_engine
+                ranking_engine=_ranking_engine
             )
             print("✅ Report Generator initialized")
     except ImportError:
@@ -80,7 +70,6 @@ def initialize_all():
             _action_executor = ActionExecutor(
                 graph=_graph,
                 report_generator=_report_generator,
-                alert_engine=_alert_engine,
                 dqi_calculator=_dqi_calculator
             )
             print("✅ Action Executor initialized")
@@ -113,12 +102,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from api.routes import query, dqi, alerts, reports, actions, analytics, risk, clustering
+from api.routes import query, dqi, reports, actions, analytics, risk, clustering
 
 app.include_router(dqi.router, prefix="/api/dqi", tags=["DQI"])
 app.include_router(query.router, prefix="/api/query", tags=["Query"])
 app.include_router(risk.router, prefix="/api/risk", tags=["Risk"])
-app.include_router(alerts.router, prefix="/api/alerts", tags=["Alerts"])
 app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
 app.include_router(actions.router, prefix="/api/actions", tags=["Actions"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])

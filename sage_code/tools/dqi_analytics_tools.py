@@ -44,15 +44,15 @@ class DQIMixin:
     @property
     def dqi_calculator(self):
         if not self._dqi_calculator and self.graph:
-            from intelligence.dqi.calculator import DQICalculator
+            from analytics.dqi.calculator import DQICalculator
             self._dqi_calculator = DQICalculator(self.graph)
         return self._dqi_calculator
 
     @property
     def explainer(self):
         if not self._explainer:
-            from intelligence.dqi.explainer import DQIExplainer
-            self._explainer = DQIExplainer(self.llm)
+            from analytics.dqi.llm_validator import DQIValidator
+            self._explainer = DQIValidator(self.llm)
         return self._explainer
 
     @property
@@ -104,7 +104,7 @@ Details:
 
 class ExplainDQITool(DQIMixin, BaseTool):
     name = "explain_dqi"
-    description = "Get an LLM-generated explanation and recommendations for a DQI score."
+    description = "Get an LLM-generated validation and analysis for a DQI score."
     
     @property
     def args_schema(self) -> Type[BaseModel]:
@@ -118,15 +118,16 @@ class ExplainDQITool(DQIMixin, BaseTool):
                 res = self.dqi_calculator.calculate_study(entity_id.replace("STUDY:", ""))
             else:
                 res = self.dqi_calculator.calculate_patient(entity_id.replace("SUBJECT:", ""))
-                
-            explanation = self.explainer.explain(res)
-            recs = self.explainer.generate_recommendations(res)
             
-            return f"""Explanation for {entity_id}:
-{explanation}
+            # Use validate method from DQIValidator
+            from analytics.dqi.weights import DQI_THRESHOLDS
+            validation = self.explainer.validate(res, DQI_THRESHOLDS)
+            
+            return f"""Analysis for {entity_id}:
+Score: {res.score:.1f}/100 | Grade: {res.grade} | Status: {res.status}
 
-Recommendations:
-{chr(10).join(f"{i+1}. {r}" for i, r in enumerate(recs))}"""
+Validation:
+{validation}"""
         except Exception as e:
             return f"Error explaining DQI: {str(e)}"
 
