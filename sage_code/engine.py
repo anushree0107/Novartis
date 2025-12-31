@@ -884,6 +884,17 @@ Fix the code and return ONLY the corrected Python code (no explanation, no JSON)
             return "No relevant information found."
         
         context_parts = []
+        
+        # 1. EXPLICITLY ADD CODE RESULTS (High Priority)
+        code_results = [r for r in results if "code_analysis_result" in r.node_data]
+        if code_results:
+             context_parts.append("\n## 📊 EXECUTED CODE RESULTS (High Confidence Data)")
+             for res in code_results:
+                  # Use the exact output from code execution
+                  code_out = res.node_data["code_analysis_result"]
+                  context_parts.append(f"SOURCE: {res.node_id} ({res.node_type})\nOUTPUT:\n{code_out}\n{'-'*40}")
+        
+        # 2. Add Graph Context
         by_type: Dict[str, List[HopResult]] = {}
         
         for result in results:
@@ -894,9 +905,14 @@ Fix the code and return ONLY the corrected Python code (no explanation, no JSON)
         for node_type, type_results in by_type.items():
             context_parts.append(f"\n## {node_type}s ({len(type_results)} found)")
             
-            for result in type_results[:5]:
-                attrs = [f"{k}={v}" for k, v in result.node_data.items() if k != "node_type" and v]
-                attrs_str = ", ".join(attrs[:5])
+            for result in type_results[:10]: # Increased from 5 to 10
+                # Filter out heavy fields
+                filtered_data = {k: v for k, v in result.node_data.items() 
+                                 if k not in ["code_analysis_result", "code_error", "node_type"] and v}
+                
+                attrs = [f"{k}={v}" for k, v in filtered_data.items()]
+                # Format properly
+                attrs_str = ", ".join(attrs[:8]) # Increased limit
                 hop_info = f" (hops: {len(result.hop_path)})" if len(result.hop_path) > 1 else ""
                 context_parts.append(f"- {result.node_id}: {attrs_str}{hop_info}")
         

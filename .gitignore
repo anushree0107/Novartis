@@ -71,3 +71,4 @@ NEST 2.0 Data files_Anonymized/
 # Database
 *.db
 *.sqlite3
+.pytest_cache

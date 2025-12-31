@@ -116,14 +116,18 @@ class SAGEAgent:
             # 2. Single LLM call to synthesize answer
             from langchain_core.messages import SystemMessage, HumanMessage
             
-            synthesis_prompt = f"""You are a clinical trial data analyst. Answer the question using ONLY the provided graph context.
+            synthesis_prompt = f"""You are a senior clinical trial data analyst. Answer the question using ONLY the provided graph context.
 
 GRAPH CONTEXT:
 {context}
 
 QUESTION: {question}
 
-Provide a clear, concise answer with specific data from the context. If the context doesn't contain relevant information, say so."""
+**Instructions:**
+1. Provide a clear, concise, and professional answer.
+2. support your answer with specific data points from the context.
+3. **DO NOT** use phrases like "Let me look," "Based on the context," or "I see that." Start directly with the answer.
+4. If the context doesn't contain relevant information, state that clearly and professionally."""
 
             response = self._llm.invoke([
                 SystemMessage(content=SAGE_AGENT_PROMPT),
