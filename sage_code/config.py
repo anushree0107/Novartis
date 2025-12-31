@@ -33,11 +33,11 @@ class GraphConfig:
     
     @property
     def graph_path(self) -> str:
-        return os.path.join(PROJECT_ROOT, "crag", self.graph_file)
+        return os.path.join(PROJECT_ROOT, "sage_code", self.graph_file)
 
 
 @dataclass
-class CRAGConfig:
+class SAGEConfig:
     # Core settings
     enabled: bool = True
     n_hops: int = 3
@@ -79,7 +79,7 @@ class CRAGConfig:
 class AgentConfig:
     llm: LLMConfig = field(default_factory=LLMConfig)
     graph: GraphConfig = field(default_factory=GraphConfig)
-    crag: CRAGConfig = field(default_factory=CRAGConfig)
+    sage_code: SAGEConfig = field(default_factory=SAGEConfig)
     verbose: bool = False
     max_iterations: int = 15
 

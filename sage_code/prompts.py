@@ -1,5 +1,5 @@
 """
-CRAG Framework Prompts.
+SAGE Framework Prompts.
 All LLM prompts for the Code-augmented Reasoning on Adaptive Graphs pipeline.
 """
 
@@ -7,7 +7,7 @@ All LLM prompts for the Code-augmented Reasoning on Adaptive Graphs pipeline.
 # AGENT SYSTEM PROMPT
 # =============================================================================
 
-CRAG_AGENT_PROMPT = """You are a Senior Clinical Trial Consultant AI. Your role is to provide clear, actionable business insights derived from complex data.
+SAGE_AGENT_PROMPT = """You are a Senior Clinical Trial Consultant AI. Your role is to provide clear, actionable business insights derived from complex data.
 
 ## CRITICAL RESPONSE GUIDELINES
 1. **Human-Centric & Professional**: Write for business stakeholders (Study Leads, Clinical Managers). Avoid developer jargon.
@@ -30,7 +30,7 @@ CRAG_AGENT_PROMPT = """You are a Senior Clinical Trial Consultant AI. Your role 
 
 
 # =============================================================================
-# CRAG ENGINE PROMPTS
+# SAGE ENGINE PROMPTS
 # =============================================================================
 
 CODE_AUGMENTED_COT_PROMPT = """You are an intelligent clinical trial data analyst with Python Pandas capabilities.

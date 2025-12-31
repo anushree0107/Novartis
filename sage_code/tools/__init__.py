@@ -1,4 +1,4 @@
-"""CRAG Tools Package."""
+"""SAGE Tools Package."""
 
 from .code_executor import CodeExecutorTool, create_code_executor_tool
 from .graph_tools import create_graph_tools

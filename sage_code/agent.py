@@ -3,16 +3,16 @@ from typing import Optional, List, Dict, Any
 import networkx as nx
 from dotenv import load_dotenv
 
-from .config import AgentConfig, get_default_config, CRAGConfig
+from .config import AgentConfig, get_default_config, SAGEConfig
 from .tools import create_graph_tools, create_code_executor_tool, ToolRegistry
 from .graph_builder import ClinicalTrialGraphBuilder
-from .prompts import CRAG_AGENT_PROMPT
-from .engine import CRAGEngine
+from .prompts import SAGE_AGENT_PROMPT
+from .engine import SAGEEngine
 
 load_dotenv()
 
 
-class CRAGAgent:
+class SAGEAgent:
     def __init__(self, config: AgentConfig = None):
         self.config = config or get_default_config()
         self.graph: Optional[nx.DiGraph] = None
@@ -51,12 +51,12 @@ class CRAGAgent:
         
         # Initialize LLM for HopRAG if enabled
         hop_engine = None
-        if self.config.crag.enabled:
+        if self.config.sage_code.enabled:
             self._init_llm()
-            hop_engine = CRAGEngine(
+            hop_engine = SAGEEngine(
                 graph=self.graph, 
                 llm=self._llm,
-                config=self.config.crag
+                config=self.config.sage_code
             )
 
         for tool in create_graph_tools(self.graph, hop_engine=hop_engine):
@@ -96,10 +96,10 @@ class CRAGAgent:
         """Get or create HopRAG engine."""
         if not hasattr(self, '_hop_engine') or self._hop_engine is None:
             self._init_llm()
-            self._hop_engine = CRAGEngine(
+            self._hop_engine = SAGEEngine(
                 graph=self.graph,
                 llm=self._llm,
-                config=self.config.crag
+                config=self.config.sage_code
             )
         return self._hop_engine
     
@@ -110,7 +110,7 @@ class CRAGAgent:
         try:
             # 1. Run HopRAG to get relevant graph context
             hop_engine = self._get_hop_engine()
-            hop_results = hop_engine.retrieve_reason_prune(question, top_k=self.config.crag.top_k)
+            hop_results = hop_engine.retrieve_reason_prune(question, top_k=self.config.sage_code.top_k)
             context = hop_engine.format_results_for_context(hop_results)
             
             # 2. Single LLM call to synthesize answer
@@ -126,7 +126,7 @@ QUESTION: {question}
 Provide a clear, concise answer with specific data from the context. If the context doesn't contain relevant information, say so."""
 
             response = self._llm.invoke([
-                SystemMessage(content=CRAG_AGENT_PROMPT),
+                SystemMessage(content=SAGE_AGENT_PROMPT),
                 HumanMessage(content=synthesis_prompt)
             ])
             
@@ -139,13 +139,13 @@ Provide a clear, concise answer with specific data from the context. If the cont
         return tool.run(**kwargs) if tool else f"Tool '{name}' not found"
 
 
-def create_agent(api_key: str = None, auto_load: bool = True) -> CRAGAgent:
+def create_agent(api_key: str = None, auto_load: bool = True) -> SAGEAgent:
     try:
         from .config import AgentConfig, LLMConfig, GraphConfig
     except ImportError:
         from core import AgentConfig, LLMConfig, GraphConfig
     config = AgentConfig(llm=LLMConfig(api_key=api_key), graph=GraphConfig(auto_build=True))
-    agent = CRAGAgent(config)
+    agent = SAGEAgent(config)
     if auto_load:
         agent.load_or_build_graph()
     return agent

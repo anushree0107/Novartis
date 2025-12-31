@@ -3,18 +3,18 @@ import logging
 from typing import Dict, List, Tuple, Optional, Set, Any
 import networkx as nx
 
-from .config import CRAGConfig
+from .config import SAGEConfig
 from .models import HopResult
 from .prompts import PSEUDO_QUERY_PROMPT
 
-logger = logging.getLogger("crag")
+logger = logging.getLogger("sage_code")
 
 
-class CRAGEngine:
-    def __init__(self, graph: nx.DiGraph, llm=None, config: Optional[CRAGConfig] = None):
+class SAGEEngine:
+    def __init__(self, graph: nx.DiGraph, llm=None, config: Optional[SAGEConfig] = None):
         self.graph = graph
         self.llm = llm
-        self.config = config or CRAGConfig()
+        self.config = config or SAGEConfig()
         self._node_index = self._build_node_index()
         self._pseudo_query_cache: Dict[str, Dict[str, List[str]]] = {}
         self._llm_call_count = 0 
@@ -28,7 +28,7 @@ class CRAGEngine:
     def _init_code_executor(self):
         try:
              from .tools.code_executor import create_code_executor_tool
-             # crag/ is one level below project root
+             # sage_code/ is one level below project root
              root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
              data_dir = os.path.join(root_dir, "processed_data")
              self.code_executor = create_code_executor_tool(data_dir=data_dir)
@@ -55,7 +55,7 @@ class CRAGEngine:
         level = getattr(logging, self.config.log_level.upper(), logging.INFO)
         if not logger.handlers:
             handler = logging.StreamHandler()
-            handler.setFormatter(logging.Formatter("[HopRAG] %(levelname)s: %(message)s"))
+            handler.setFormatter(logging.Formatter("[SAGE-CODE] %(levelname)s: %(message)s"))
             logger.addHandler(handler)
         logger.setLevel(level)
     
@@ -840,14 +840,14 @@ Fix the code and return ONLY the corrected Python code (no explanation, no JSON)
         # Reset LLM call counter for this query
         self._llm_call_count = 0
         
-        logger.info(f"=== HopRAG Pipeline Start ===")
+        logger.info(f"=== SAGE-CODE Pipeline Start ===")
         logger.info(f"Query: {query[:80]}...")
         
         # ULTRA-FAST: Skip all LLM reasoning if configured
         if self.config.skip_multi_hop or not self.config.use_llm_reasoning:
             logger.info("ULTRA-FAST MODE: Skipping LLM traversal, using keyword retrieval only")
             initial_results = self.initial_retrieve(query, top_k=top_k * 2)
-            logger.info(f"=== HopRAG Pipeline Complete (FAST): {len(initial_results)} results, 0 LLM calls ===")
+            logger.info(f"=== SAGE-CODE Pipeline Complete (FAST): {len(initial_results)} results, 0 LLM calls ===")
             return initial_results[:top_k]
         
         self._init_llm()
@@ -866,7 +866,7 @@ Fix the code and return ONLY the corrected Python code (no explanation, no JSON)
             final_results = list(all_results.values())
              
         else:
-             # Standard HopRAG
+             # Standard SAGE-CODE
              initial_results = self.initial_retrieve(query, top_k=top_k)
              if not initial_results:
                  logger.warning("No initial results found")
@@ -876,7 +876,7 @@ Fix the code and return ONLY the corrected Python code (no explanation, no JSON)
              scored_results = self.compute_helpfulness(query, all_results)
              final_results = self.prune_results(scored_results, top_k=top_k)
         
-        logger.info(f"=== HopRAG Pipeline Complete: {len(final_results)} results, {self._llm_call_count} LLM calls ===")
+        logger.info(f"=== SAGE-CODE Pipeline Complete: {len(final_results)} results, {self._llm_call_count} LLM calls ===")
         return final_results
     
     def format_results_for_context(self, results: List[HopResult]) -> str:
