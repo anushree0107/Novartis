@@ -2,6 +2,7 @@
 Groq LLM Client for the Text-to-SQL agents
 """
 import os
+import time
 from typing import List, Dict, Any, Optional
 from groq import Groq
 import json
@@ -33,10 +34,11 @@ class GroqLLMClient:
         temperature: float = None,
         max_tokens: int = 2048,
         json_mode: bool = False,
-        stop: List[str] = None
+        stop: List[str] = None,
+        max_retries: int = 3
     ) -> Dict[str, Any]:
         """
-        Send a chat completion request to Groq
+        Send a chat completion request to Groq with retry logic for rate limits
         
         Args:
             messages: List of message dicts with 'role' and 'content'
@@ -45,6 +47,7 @@ class GroqLLMClient:
             max_tokens: Maximum tokens in response
             json_mode: Whether to request JSON output
             stop: Stop sequences
+            max_retries: Maximum number of retries for rate limit errors
             
         Returns:
             Dict with 'content', 'usage', and 'model' keys
@@ -52,45 +55,59 @@ class GroqLLMClient:
         model = model or MODELS['sql_generator']
         temperature = temperature if temperature is not None else AGENT_CONFIG['temperature']
         
-        try:
-            kwargs = {
-                "model": model,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-            }
-            
-            if json_mode:
-                kwargs["response_format"] = {"type": "json_object"}
-            
-            if stop:
-                kwargs["stop"] = stop
-            
-            response = self.client.chat.completions.create(**kwargs)
-            
-            # Update usage stats
-            if response.usage:
-                self.usage_stats['total_input_tokens'] += response.usage.prompt_tokens
-                self.usage_stats['total_output_tokens'] += response.usage.completion_tokens
-                self.usage_stats['total_requests'] += 1
-            
-            return {
-                'content': response.choices[0].message.content,
-                'usage': {
-                    'input_tokens': response.usage.prompt_tokens if response.usage else 0,
-                    'output_tokens': response.usage.completion_tokens if response.usage else 0
-                },
-                'model': model,
-                'finish_reason': response.choices[0].finish_reason
-            }
-            
-        except Exception as e:
-            return {
-                'content': None,
-                'error': str(e),
-                'usage': {'input_tokens': 0, 'output_tokens': 0},
-                'model': model
-            }
+        kwargs = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        
+        if json_mode:
+            kwargs["response_format"] = {"type": "json_object"}
+        
+        if stop:
+            kwargs["stop"] = stop
+        
+        last_error = None
+        for attempt in range(max_retries + 1):
+            try:
+                response = self.client.chat.completions.create(**kwargs)
+                
+                # Update usage stats
+                if response.usage:
+                    self.usage_stats['total_input_tokens'] += response.usage.prompt_tokens
+                    self.usage_stats['total_output_tokens'] += response.usage.completion_tokens
+                    self.usage_stats['total_requests'] += 1
+                
+                return {
+                    'content': response.choices[0].message.content,
+                    'usage': {
+                        'input_tokens': response.usage.prompt_tokens if response.usage else 0,
+                        'output_tokens': response.usage.completion_tokens if response.usage else 0
+                    },
+                    'model': model,
+                    'finish_reason': response.choices[0].finish_reason
+                }
+                
+            except Exception as e:
+                last_error = str(e)
+                # Check for rate limit error (429)
+                if '429' in str(e) or 'rate' in str(e).lower() or 'too many' in str(e).lower():
+                    if attempt < max_retries:
+                        # Exponential backoff: 30s, 60s, 120s
+                        wait_time = 30 * (2 ** attempt)
+                        print(f"⚠️ Rate limited. Waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
+                        time.sleep(wait_time)
+                        continue
+                # For other errors, don't retry
+                break
+        
+        return {
+            'content': None,
+            'error': last_error,
+            'usage': {'input_tokens': 0, 'output_tokens': 0},
+            'model': model
+        }
     
     def extract_json(self, text: str) -> Optional[Dict]:
         """Extract JSON from text response"""

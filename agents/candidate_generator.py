@@ -77,21 +77,31 @@ class GenerateCandidateQueryTool(BaseTool):
         system_prompt = """You are an expert PostgreSQL developer for clinical trial databases.
 Generate accurate SQL queries following these guidelines:
 
+CRITICAL PRINCIPLE - SIMPLICITY FIRST:
+- Use the SIMPLEST query that answers the question correctly
+- Do NOT combine multiple tables with UNION unless explicitly needed
+- Do NOT add redundant WHERE filters (e.g., study_10_ tables already contain only Study 10 data)
+- A single table query is usually correct - avoid over-engineering
+
+Table Naming Convention:
+- Tables are prefixed with study number (e.g., study_10_*, study_1_*)
+- Data for a study is ONLY in its prefixed tables
+- DO NOT filter by _study_number column if table name already specifies the study
+
+Data Format Conventions:
+- Country values use 3-letter ISO codes: USA, JPN, CHN, CAN, ITA, POL, HUN, CZE, ESP, etc.
+- For patient counts, prefer "subject_level_metric" tables which have one row per subject
+- Use COUNT(DISTINCT subject_id) for patient counts to avoid duplicates
+
 SQL Guidelines:
 1. Use ONLY tables and columns from the provided schema
 2. Use explicit column names, never SELECT *
-3. Use appropriate JOINs based on common columns
-4. Apply proper WHERE clauses for filtering
+3. Only JOIN tables when data spans multiple tables
+4. Apply proper WHERE clauses for filtering (but not redundant ones)
 5. Use GROUP BY for aggregations
-6. Include ORDER BY for meaningful results
+6. Include ORDER BY only for ranking/list questions
 7. Add LIMIT for large result sets
 8. Handle NULLs appropriately (COALESCE, IS NULL)
-
-PostgreSQL Syntax:
-- Case-insensitive matching: ILIKE
-- Date functions: DATE_PART, DATE_TRUNC, CURRENT_DATE
-- Aggregates: COUNT, SUM, AVG, MAX, MIN
-- Conditional: CASE WHEN ... THEN ... END
 
 Output ONLY the SQL query in ```sql``` code blocks."""
 
@@ -159,7 +169,18 @@ Generate the SQL query:"""
         
         system_prompt = """You are an expert PostgreSQL developer. 
 Use chain-of-thought reasoning to generate accurate SQL queries.
-Think through each step explicitly before writing the final query."""
+Think through each step explicitly before writing the final query.
+
+CRITICAL PRINCIPLE - SIMPLICITY FIRST:
+- Use the SIMPLEST query that answers the question correctly
+- Do NOT combine multiple tables with UNION unless explicitly needed
+- Tables are prefixed with study number (e.g., study_10_*) - they already contain only that study's data
+- A single table query is usually correct - avoid over-engineering
+
+Data Format Conventions:
+- Country values use 3-letter ISO codes: USA, JPN, CHN, CAN, ITA, POL, HUN, CZE, ESP, etc.
+- For patient counts, prefer "subject_level_metric" tables which have one row per subject
+- Use COUNT(DISTINCT subject_id) for patient counts"""
 
         user_content = f"""Generate a PostgreSQL query using step-by-step reasoning:
 
@@ -242,7 +263,17 @@ Now provide your reasoning and final SQL query in ```sql``` blocks:"""
         
         system_prompt = """You are an expert PostgreSQL developer.
 For complex queries, break them into manageable parts using CTEs (WITH clauses).
-This helps with clarity and debugging."""
+This helps with clarity and debugging.
+
+CRITICAL PRINCIPLE - SIMPLICITY FIRST:
+- Tables are prefixed with study number (e.g., study_10_*) - they already contain only that study's data
+- Do NOT add redundant WHERE filters on _study_number
+- Use the SIMPLEST query that answers the question correctly
+
+Data Format Conventions:
+- Country values use 3-letter ISO codes: USA, JPN, CHN, CAN, ITA, POL, HUN, CZE, ESP, etc.
+- For patient counts, prefer "subject_level_metric" tables which have one row per subject
+- Use COUNT(DISTINCT subject_id) for patient counts"""
 
         user_content = f"""Generate a PostgreSQL query by decomposing the complex question:
 
