@@ -463,6 +463,9 @@ class CandidateGeneratorAgent(BaseAgent):
         return """You are a Candidate Generator agent for SQL synthesis.
 Your job is to generate accurate SQL queries and fix any errors."""
 
+    # Simple in-memory cache for candidate generation
+    _cg_cache = {}
+
     def execute(
         self,
         question: str,
@@ -472,40 +475,37 @@ Your job is to generate accurate SQL queries and fix any errors."""
         max_revisions: int = 2
     ) -> AgentResult:
         """
-        Execute CG agent pipeline:
-        1. Generate multiple SQL candidates using different strategies
+        Execute CG agent pipeline in parallel:
+        1. Generate multiple SQL candidates using different strategies (parallelized)
         2. Execute each candidate to check for errors
         3. Revise faulty candidates
-        
-        Args:
-            question: Original user question
-            ss_result: Output from SchemaSelectorAgent
-            ir_result: Output from InformationRetrieverAgent
-            num_candidates: Number of candidates to generate
-            max_revisions: Max revision attempts per candidate
-            
-        Returns:
-            AgentResult with SQL candidates
+        Uses a simple cache to avoid recomputation.
         """
+        import time
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         start_time = time.time()
         tool_calls = []
         total_tokens = 0
-        
+
         num_candidates = num_candidates or AGENT_CONFIG.get('top_candidates', 3)
         schema_context = ss_result.get('schema_context', '')
         entities = ir_result.get('entities', {})
-        
+
         # Define generation strategies
         strategies = ['standard', 'cot']
         if num_candidates > 2:
             strategies.append('decomposition')
-        
-        candidates = []
-        
-        # Generate candidates with different strategies
-        for i, strategy in enumerate(strategies[:num_candidates]):
-            self.log(f"Generating candidate {i+1} with {strategy} strategy...")
-            
+
+        cache_key = (question.strip().lower(), schema_context.strip().lower(), str(entities), num_candidates)
+        if cache_key in self._cg_cache:
+            cached = self._cg_cache[cache_key]
+            cached.execution_time = time.time() - start_time
+            return cached
+
+        candidates = [None] * len(strategies[:num_candidates])
+
+        def generate_candidate(idx, strategy):
+            self.log(f"Generating candidate {idx+1} with {strategy} strategy...")
             gen_result = self.call_tool(
                 "generate_candidate_query",
                 question=question,
@@ -513,64 +513,63 @@ Your job is to generate accurate SQL queries and fix any errors."""
                 entities=entities,
                 strategy=strategy
             )
-            tool_calls.append(gen_result)
-            total_tokens += gen_result.tokens_used
-            
-            if not gen_result.success or not gen_result.data.get('sql'):
-                continue
-            
-            sql = gen_result.data['sql']
-            
-            # Execute to check for errors
-            exec_result = self._execute_and_check(sql)
-            
-            candidate = {
-                'sql': sql,
-                'strategy': strategy,
-                'is_valid': exec_result['valid'],
-                'error': exec_result.get('error'),
-                'result_preview': exec_result.get('preview'),
-                'was_revised': False
-            }
-            
-            # If error, try to revise
-            if not exec_result['valid'] and exec_result.get('error'):
-                self.log(f"Revising candidate {i+1} due to error...")
-                
-                for revision_attempt in range(max_revisions):
-                    revise_result = self.call_tool(
-                        "revise",
-                        sql=candidate['sql'],
-                        error=candidate['error'],
-                        question=question,
-                        schema_context=schema_context
-                    )
-                    tool_calls.append(revise_result)
-                    total_tokens += revise_result.tokens_used
-                    
-                    if revise_result.success and revise_result.data.get('revised_sql'):
-                        revised_sql = revise_result.data['revised_sql']
-                        exec_result = self._execute_and_check(revised_sql)
-                        
-                        candidate['sql'] = revised_sql
-                        candidate['is_valid'] = exec_result['valid']
-                        candidate['error'] = exec_result.get('error')
-                        candidate['result_preview'] = exec_result.get('preview')
-                        candidate['was_revised'] = True
-                        
-                        if exec_result['valid']:
-                            self.log(f"Candidate {i+1} fixed after revision", "success")
-                            break
-            
-            candidates.append(candidate)
-        
+            return (idx, gen_result)
+
+        # Generate candidates in parallel
+        with ThreadPoolExecutor(max_workers=len(strategies[:num_candidates])) as executor:
+            futures = [executor.submit(generate_candidate, i, strategy) for i, strategy in enumerate(strategies[:num_candidates])]
+            for future in as_completed(futures):
+                idx, gen_result = future.result()
+                tool_calls.append(gen_result)
+                total_tokens += gen_result.tokens_used
+                if not gen_result.success or not gen_result.data.get('sql'):
+                    continue
+                sql = gen_result.data['sql']
+                # Execute to check for errors
+                exec_result = self._execute_and_check(sql)
+                candidate = {
+                    'sql': sql,
+                    'strategy': strategies[idx],
+                    'is_valid': exec_result['valid'],
+                    'error': exec_result.get('error'),
+                    'result_preview': exec_result.get('preview'),
+                    'was_revised': False
+                }
+                # If error, try to revise
+                if not exec_result['valid'] and exec_result.get('error'):
+                    self.log(f"Revising candidate {idx+1} due to error...")
+                    for revision_attempt in range(max_revisions):
+                        revise_result = self.call_tool(
+                            "revise",
+                            sql=candidate['sql'],
+                            error=candidate['error'],
+                            question=question,
+                            schema_context=schema_context
+                        )
+                        tool_calls.append(revise_result)
+                        total_tokens += revise_result.tokens_used
+                        if revise_result.success and revise_result.data.get('revised_sql'):
+                            revised_sql = revise_result.data['revised_sql']
+                            exec_result = self._execute_and_check(revised_sql)
+                            candidate['sql'] = revised_sql
+                            candidate['is_valid'] = exec_result['valid']
+                            candidate['error'] = exec_result.get('error')
+                            candidate['result_preview'] = exec_result.get('preview')
+                            candidate['was_revised'] = True
+                            if exec_result['valid']:
+                                self.log(f"Candidate {idx+1} fixed after revision", "success")
+                                break
+                candidates[idx] = candidate
+
+        # Remove None entries
+        candidates = [c for c in candidates if c]
         # Sort candidates: valid first, then by strategy preference
         candidates.sort(key=lambda x: (not x['is_valid'], strategies.index(x['strategy']) if x['strategy'] in strategies else 99))
-        
+
         valid_count = sum(1 for c in candidates if c['is_valid'])
         self.log(f"Generated {len(candidates)} candidates, {valid_count} valid", "success")
-        
-        return AgentResult(
+
+        agent_result = AgentResult(
             success=len(candidates) > 0,
             data={
                 'candidates': candidates,
@@ -583,6 +582,8 @@ Your job is to generate accurate SQL queries and fix any errors."""
             execution_time=time.time() - start_time,
             tool_calls=tool_calls
         )
+        self._cg_cache[cache_key] = agent_result
+        return agent_result
     
     def _execute_and_check(self, sql: str) -> Dict:
         """Execute SQL and check for errors"""

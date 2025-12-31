@@ -268,6 +268,9 @@ class UnitTesterAgent(BaseAgent):
         return """You are a Unit Tester agent for SQL synthesis.
 Your job is to select the best SQL query from candidates using unit tests."""
 
+    # Simple in-memory cache for UT results
+    _ut_cache = {}
+
     def execute(
         self,
         question: str,
@@ -275,31 +278,32 @@ Your job is to select the best SQL query from candidates using unit tests."""
         num_tests: int = 5
     ) -> AgentResult:
         """
-        Execute UT agent pipeline:
+        Execute UT agent pipeline in parallel:
         1. Generate unit tests for candidates
-        2. Evaluate each candidate against tests
+        2. Evaluate each candidate against tests (parallelized)
         3. Score and rank candidates
         4. Select the best candidate
-        
-        Args:
-            question: Original user question
-            candidates: SQL candidates from CandidateGeneratorAgent
-            num_tests: Number of unit tests to generate
-            
-        Returns:
-            AgentResult with final selected SQL
+        Uses a simple cache to avoid recomputation.
         """
+        import time
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         start_time = time.time()
         tool_calls = []
         total_tokens = 0
-        
+
         # Filter to valid candidates only for testing
         valid_candidates = [c for c in candidates if c.get('is_valid', False)]
-        
+
+        cache_key = (question.strip().lower(), str(valid_candidates), num_tests)
+        if cache_key in self._ut_cache:
+            cached = self._ut_cache[cache_key]
+            cached.execution_time = time.time() - start_time
+            return cached
+
         # If only one valid candidate, return it directly
         if len(valid_candidates) == 1:
             self.log("Only one valid candidate, selecting directly", "success")
-            return AgentResult(
+            agent_result = AgentResult(
                 success=True,
                 data={
                     'selected_sql': valid_candidates[0]['sql'],
@@ -312,12 +316,14 @@ Your job is to select the best SQL query from candidates using unit tests."""
                 execution_time=time.time() - start_time,
                 tool_calls=[]
             )
-        
+            self._ut_cache[cache_key] = agent_result
+            return agent_result
+
         # If no valid candidates, try to select best invalid one
         if len(valid_candidates) == 0:
             self.log("No valid candidates, selecting best effort", "warning")
             if candidates:
-                return AgentResult(
+                agent_result = AgentResult(
                     success=True,
                     data={
                         'selected_sql': candidates[0]['sql'],
@@ -330,16 +336,20 @@ Your job is to select the best SQL query from candidates using unit tests."""
                     execution_time=time.time() - start_time,
                     tool_calls=[]
                 )
-            return AgentResult(
+                self._ut_cache[cache_key] = agent_result
+                return agent_result
+            agent_result = AgentResult(
                 success=False,
                 data=None,
                 error="No candidates available",
                 execution_time=time.time() - start_time
             )
-        
+            self._ut_cache[cache_key] = agent_result
+            return agent_result
+
         # Step 1: Generate unit tests
         self.log(f"Generating {num_tests} unit tests for {len(valid_candidates)} candidates...")
-        
+
         tests_result = self.call_tool(
             "generate_unit_test",
             question=question,
@@ -348,11 +358,11 @@ Your job is to select the best SQL query from candidates using unit tests."""
         )
         tool_calls.append(tests_result)
         total_tokens += tests_result.tokens_used
-        
+
         if not tests_result.success or not tests_result.data.get('unit_tests'):
             # Fallback: select first valid candidate
             self.log("Unit test generation failed, selecting first valid candidate", "warning")
-            return AgentResult(
+            agent_result = AgentResult(
                 success=True,
                 data={
                     'selected_sql': valid_candidates[0]['sql'],
@@ -365,44 +375,49 @@ Your job is to select the best SQL query from candidates using unit tests."""
                 execution_time=time.time() - start_time,
                 tool_calls=tool_calls
             )
-        
+            self._ut_cache[cache_key] = agent_result
+            return agent_result
+
         unit_tests = tests_result.data['unit_tests']
         self.log(f"Generated {len(unit_tests)} unit tests")
-        
-        # Step 2: Evaluate candidates against each test
+
+        # Step 2: Evaluate candidates against each test in parallel
         scores = {i: 0 for i in range(len(valid_candidates))}
         evaluation_details = []
-        
-        for test in unit_tests:
+
+        def eval_test(test):
             self.log(f"Evaluating against: {test.get('test_description', 'test')[:50]}...")
-            
             eval_result = self.call_tool(
                 "evaluate",
                 candidates=valid_candidates,
                 unit_test=test,
                 question=question
             )
-            tool_calls.append(eval_result)
-            total_tokens += eval_result.tokens_used
-            
-            if eval_result.success and eval_result.data.get('evaluations'):
-                for evaluation in eval_result.data['evaluations']:
-                    idx = evaluation.get('candidate_index', 0)
-                    if evaluation.get('passes', False) and idx < len(valid_candidates):
-                        scores[idx] += 1
-                
-                evaluation_details.append({
-                    'test': test,
-                    'evaluations': eval_result.data['evaluations']
-                })
-        
+            return (test, eval_result)
+
+        with ThreadPoolExecutor(max_workers=min(4, len(unit_tests))) as executor:
+            futures = [executor.submit(eval_test, test) for test in unit_tests]
+            for future in as_completed(futures):
+                test, eval_result = future.result()
+                tool_calls.append(eval_result)
+                total_tokens += eval_result.tokens_used
+                if eval_result.success and eval_result.data.get('evaluations'):
+                    for evaluation in eval_result.data['evaluations']:
+                        idx = evaluation.get('candidate_index', 0)
+                        if evaluation.get('passes', False) and idx < len(valid_candidates):
+                            scores[idx] += 1
+                    evaluation_details.append({
+                        'test': test,
+                        'evaluations': eval_result.data['evaluations']
+                    })
+
         # Step 3: Select best candidate based on scores
         best_idx = max(scores, key=scores.get)
         best_candidate = valid_candidates[best_idx]
-        
+
         self.log(f"Selected candidate {best_idx + 1} with score {scores[best_idx]}/{len(unit_tests)}", "success")
-        
-        return AgentResult(
+
+        agent_result = AgentResult(
             success=True,
             data={
                 'selected_sql': best_candidate['sql'],
@@ -419,3 +434,5 @@ Your job is to select the best SQL query from candidates using unit tests."""
             execution_time=time.time() - start_time,
             tool_calls=tool_calls
         )
+        self._ut_cache[cache_key] = agent_result
+        return agent_result

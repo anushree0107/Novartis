@@ -108,7 +108,7 @@ class CHESSPipeline:
     4. Unit Tester (UT) - Selects best candidate via unit tests
     5. Result Explainer (RE) - Explains results in natural language
     """
-    
+
     def __init__(
         self,
         llm_client: GroqLLMClient = None,
@@ -117,78 +117,46 @@ class CHESSPipeline:
         preprocess: DatabasePreprocessor = None,
         verbose: bool = True
     ):
-        """
-        Initialize the CHESS pipeline
-        
-        Args:
-            llm_client: Groq LLM client
-            db: Database manager
-            schema_mgr: Schema manager
-            preprocess: Preprocessor with LSH and vector indices
-            verbose: Whether to print progress
-        """
-        # Initialize components
         self.llm = llm_client or GroqLLMClient()
         self.db = db or db_manager
         self.schema = schema_mgr or schema_manager
         self.preprocessor = preprocess or preprocessor
         self.verbose = verbose
-        
-        # Initialize agents
-        self.ir_agent = InformationRetrieverAgent(
-            self.llm, 
-            self.schema, 
-            self.preprocessor
-        )
+        self.ir_agent = InformationRetrieverAgent(self.llm, self.schema, self.preprocessor)
         self.ss_agent = SchemaSelectorAgent(self.llm, self.schema)
         self.cg_agent = CandidateGeneratorAgent(self.llm, self.db)
         self.ut_agent = UnitTesterAgent(self.llm, self.db)
         self.re_agent = ResultExplainerAgent(self.llm, self.db)
-    
+
     def log(self, message: str, level: str = "info"):
-        """Log pipeline progress"""
         if self.verbose:
             prefix = {
                 "info": "ℹ️",
-                "success": "✅", 
+                "success": "✅",
                 "warning": "⚠️",
                 "error": "❌",
                 "step": "🔄"
             }.get(level, "")
             print(f"{prefix} [Pipeline] {message}")
-    
+
     def run(
         self,
         question: str,
         num_candidates: int = 3,
         num_unit_tests: int = 5,
         execute_result: bool = True,
-        explain_result: bool = True
+        explain_result: bool = True,
+        disable_unit_test: bool = False
     ) -> PipelineResult:
-        """
-        Run the complete CHESS pipeline
-        
-        Args:
-            question: Natural language question
-            num_candidates: Number of SQL candidates to generate
-            num_unit_tests: Number of unit tests for selection
-            execute_result: Whether to execute final SQL
-            explain_result: Whether to generate natural language explanation
-            
-        Returns:
-            PipelineResult with generated SQL and metadata
-        """
         start_time = time.time()
         total_tokens = 0
-        
+
         self.log(f"Processing question: {question[:100]}...", "step")
-        
-        # ========== Stage 1: Information Retriever ==========
+
+        # Stage 1: Information Retriever
         self.log("Stage 1: Information Retriever", "step")
-        
         ir_result = self.ir_agent.execute(question)
         total_tokens += ir_result.tokens_used
-        
         if not ir_result.success:
             return PipelineResult(
                 success=False,
@@ -199,18 +167,15 @@ class CHESSPipeline:
                 total_tokens=total_tokens,
                 total_time=time.time() - start_time
             )
-        
         self.log(f"IR complete: {ir_result.reasoning}", "success")
-        
-        # ========== Stage 2: Schema Selector ==========
+
+        # Stage 2: Schema Selector
         self.log("Stage 2: Schema Selector", "step")
-        
         ss_result = self.ss_agent.execute(
             question=question,
             ir_result=ir_result.data
         )
         total_tokens += ss_result.tokens_used
-        
         if not ss_result.success:
             return PipelineResult(
                 success=False,
@@ -222,12 +187,10 @@ class CHESSPipeline:
                 total_tokens=total_tokens,
                 total_time=time.time() - start_time
             )
-        
         self.log(f"SS complete: {ss_result.reasoning}", "success")
-        
-        # ========== Stage 3: Candidate Generator ==========
+
+        # Stage 3: Candidate Generator
         self.log("Stage 3: Candidate Generator", "step")
-        
         cg_result = self.cg_agent.execute(
             question=question,
             ss_result=ss_result.data,
@@ -235,7 +198,6 @@ class CHESSPipeline:
             num_candidates=num_candidates
         )
         total_tokens += cg_result.tokens_used
-        
         if not cg_result.success:
             return PipelineResult(
                 success=False,
@@ -248,48 +210,49 @@ class CHESSPipeline:
                 total_tokens=total_tokens,
                 total_time=time.time() - start_time
             )
-        
         self.log(f"CG complete: {cg_result.reasoning}", "success")
-        
         candidates = cg_result.data.get('candidates', [])
-        
-        # ========== Stage 4: Unit Tester ==========
-        self.log("Stage 4: Unit Tester", "step")
-        
-        ut_result = self.ut_agent.execute(
-            question=question,
-            candidates=candidates,
-            num_tests=num_unit_tests
-        )
-        total_tokens += ut_result.tokens_used
-        
-        if not ut_result.success:
-            # Fallback: use best candidate from CG
-            self.log("UT failed, using CG best candidate", "warning")
-            best_sql = cg_result.data.get('best_candidate', {}).get('sql')
+
+        # Stage 4: Unit Tester or fast path
+        ut_result = None
+        best_sql = None
+        if disable_unit_test:
+            self.log("Unit testing disabled: selecting first valid candidate from CG.", "warning")
+            best_candidate = next((c for c in candidates if c.get('is_valid')), None)
+            if not best_candidate and candidates:
+                best_candidate = candidates[0]
+            best_sql = best_candidate['sql'] if best_candidate else None
         else:
-            best_sql = ut_result.data.get('selected_sql')
-            self.log(f"UT complete: {ut_result.reasoning}", "success")
-        
-        # ========== Execute Final SQL ==========
+            self.log("Stage 4: Unit Tester", "step")
+            ut_result = self.ut_agent.execute(
+                question=question,
+                candidates=candidates,
+                num_tests=num_unit_tests
+            )
+            total_tokens += ut_result.tokens_used
+            if not ut_result.success:
+                self.log("UT failed, using CG best candidate", "warning")
+                best_sql = cg_result.data.get('best_candidate', {}).get('sql')
+            else:
+                best_sql = ut_result.data.get('selected_sql')
+                self.log(f"UT complete: {ut_result.reasoning}", "success")
+
+        # Execute Final SQL
         execution_result = None
         if execute_result and best_sql:
             self.log("Executing final SQL...", "step")
             execution_result = self.db.safe_execute(best_sql, timeout_seconds=30)
-            
             if execution_result.get('success'):
                 self.log(f"Execution success: {execution_result.get('row_count', 0)} rows", "success")
             else:
                 self.log(f"Execution failed: {execution_result.get('error', 'Unknown')}", "warning")
-        
-        # ========== Stage 5: Result Explainer ==========
+
+        # Stage 5: Result Explainer
         re_result = None
         explanation = None
         schema_context = ss_result.data.get('schema_text', '') if ss_result and ss_result.data else ''
-        
         if explain_result and execution_result and execution_result.get('success') and best_sql:
             self.log("Stage 5: Result Explainer", "step")
-            
             re_result = self.re_agent.execute(
                 question=question,
                 sql=best_sql,
@@ -297,20 +260,17 @@ class CHESSPipeline:
                 schema_context=schema_context
             )
             total_tokens += re_result.tokens_used
-            
             if re_result.success:
                 explanation = re_result.data.get('explanation', '')
                 self.log(f"RE complete: Generated explanation", "success")
-                
-                # Handle split queries if any
                 if re_result.data.get('is_split'):
                     self.log(f"Query was split into {len(re_result.data.get('split_queries', []))} parts", "info")
             else:
                 self.log(f"RE failed: {re_result.error}", "warning")
-        
+
         total_time = time.time() - start_time
         self.log(f"Pipeline complete in {total_time:.2f}s", "success")
-        
+
         return PipelineResult(
             success=best_sql is not None,
             sql=best_sql,
@@ -325,19 +285,18 @@ class CHESSPipeline:
             total_tokens=total_tokens,
             total_time=total_time
         )
-    
     def quick_query(self, question: str) -> Dict[str, Any]:
         """
         Quick query mode - simplified output with natural language explanation
-        
+
         Args:
             question: Natural language question
-            
+
         Returns:
             Dict with sql, success, data, explanation, and error
         """
         result = self.run(question, execute_result=True)
-        
+
         return {
             'success': result.success,
             'sql': result.sql,
@@ -352,13 +311,13 @@ class CHESSPipeline:
 def create_pipeline(verbose: bool = True) -> CHESSPipeline:
     """Factory function to create a configured pipeline"""
     llm = GroqLLMClient() if GROQ_API_KEY else None
-    
+
     if not llm:
         raise ValueError("GROQ_API_KEY not set. Please configure it in .env file")
-    
+
     # Try to load preprocessor cache
     preprocessor.load_cache()
-    
+
     return CHESSPipeline(
         llm_client=llm,
         verbose=verbose
