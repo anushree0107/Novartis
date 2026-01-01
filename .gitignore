@@ -28,10 +28,11 @@ wheels/
 # Virtual environments
 novartis/
 venv/
+clinical_trial_graph.graphml 
 ENV/
 env/
 .venv/
-
+myenv/
 # IDE
 .vscode/
 .idea/
