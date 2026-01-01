@@ -138,6 +138,10 @@ Nova-text-to-sql/
 │   └── indexer.py             # LSH and Vector DB indices
 ├── pipeline/
 │   └── orchestrator.py        # Pipeline coordinator
+├── sage_bench/                 # SAGE-BENCH evaluation framework
+│   ├── evaluator.py           # Evaluation logic
+│   ├── new_testbench.json     # Test cases (25 questions)
+│   └── testbench.json         # Legacy testbench
 ├── cli/
 │   └── main.py                # Command-line interface
 ├── utils/
@@ -195,6 +199,56 @@ The system implements several token optimization strategies:
 The system uses Groq's LLM models:
 - `llama-3.3-70b-versatile` - For SQL generation and complex reasoning
 - `llama-3.1-8b-instant` - For fast evaluation and filtering tasks
+
+## SAGE-BENCH Evaluation
+
+**SAGE-BENCH** (SQL Accuracy and Generation Evaluation Benchmark) is our comprehensive evaluation framework for testing Text-to-SQL systems on clinical trial data.
+
+### Overview
+
+- **25 curated test cases** across 3 difficulty levels
+- **8 clinical trial tables** covering study metrics, safety data, coding records, and more
+- **Multiple query categories**: count, aggregation, filtering, joins, and complex analytics
+
+### Difficulty Levels
+
+| Level | Count | Description |
+|-------|-------|-------------|
+| Easy | 10 | Single-table queries with basic counts and filters |
+| Medium | 10 | Group-by aggregations, distinct counts, filtered max |
+| Hard | 5 | Multi-table joins, percentages, complex analytics |
+
+### Query Categories
+
+- `count` - Basic record counting
+- `aggregation` - SUM, MAX, AVG operations
+- `count_filter` - Counting with WHERE conditions
+- `count_distinct` - Distinct value counting
+- `group_by_max` - Finding top values per group
+- `percentage` - Ratio calculations
+- `multi_table_sum` - Cross-table aggregations
+- `top_n` - Ranking queries
+
+### Running Evaluations
+
+```bash
+# Run easy tests
+python run_easy_tests_new.py
+
+# Run medium/hard tests
+python run_medium_hard_tests.py
+
+# Run full evaluation
+python run_new_tests.py
+```
+
+### Benchmark File
+
+The benchmark is defined in `sage_bench/new_testbench.json` with structured test cases including:
+- Natural language questions
+- Expected answers with types
+- Required tables
+- Difficulty and category labels
 
 ## License
 

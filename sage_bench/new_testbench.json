@@ -1,6 +1,7 @@
 {
+  "name": "SAGE-BENCH",
   "version": "2.0",
-  "description": "Testbench for processed clinical trial data (8 tables)",
+  "description": "SAGE-BENCH (SQL Accuracy and Generation Evaluation Benchmark) - A comprehensive testbench for evaluating Text-to-SQL systems on clinical trial data",
   "created": "2025-12-31",
   "database_schema": {
     "tables": [
