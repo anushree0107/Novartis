@@ -1,0 +1,254 @@
+{
+  "name": "SAGE-BENCH",
+  "version": "2.0",
+  "description": "SAGE-BENCH (SQL Accuracy and Generation Evaluation Benchmark) - A comprehensive testbench for evaluating Text-to-SQL systems on clinical trial data",
+  "created": "2025-12-31",
+  "database_schema": {
+    "tables": [
+      "study_metrics",
+      "edrr_processed", 
+      "esae_dashboard_processed",
+      "esae_processed",
+      "meddra_processed",
+      "whodd_processed",
+      "missing_pages_processed",
+      "visit_projection_processed"
+    ]
+  },
+  "tests": {
+    "easy": [
+      {
+        "id": 1,
+        "question": "How many studies are there in the database?",
+        "expected_answer": 22,
+        "expected_type": "number",
+        "tables": ["study_metrics"],
+        "difficulty": "easy",
+        "category": "count"
+      },
+      {
+        "id": 2,
+        "question": "Which study has the most total issues?",
+        "expected_answer": "Study 16",
+        "expected_type": "string",
+        "tables": ["study_metrics"],
+        "difficulty": "easy",
+        "category": "aggregation"
+      },
+      {
+        "id": 3,
+        "question": "How many total issues are there across all studies?",
+        "expected_answer": 2164,
+        "expected_type": "number",
+        "tables": ["study_metrics"],
+        "difficulty": "easy",
+        "category": "sum"
+      },
+      {
+        "id": 4,
+        "question": "How many MedDRA coding records are there for Study 10?",
+        "expected_answer": 796,
+        "expected_type": "number",
+        "tables": ["meddra_processed"],
+        "difficulty": "easy",
+        "category": "count_filter"
+      },
+      {
+        "id": 5,
+        "question": "How many WHODD drug coding records are there for Study 10?",
+        "expected_answer": 568,
+        "expected_type": "number",
+        "tables": ["whodd_processed"],
+        "difficulty": "easy",
+        "category": "count_filter"
+      },
+      {
+        "id": 6,
+        "question": "How many total SAE discrepancies are in the database?",
+        "expected_answer": 17098,
+        "expected_type": "number",
+        "tables": ["esae_dashboard_processed"],
+        "difficulty": "easy",
+        "category": "count"
+      },
+      {
+        "id": 7,
+        "question": "How many studies have zero total issues?",
+        "expected_answer": 7,
+        "expected_type": "number",
+        "tables": ["study_metrics"],
+        "difficulty": "easy",
+        "category": "count_filter"
+      },
+      {
+        "id": 8,
+        "question": "How many missing pages are there in total?",
+        "expected_answer": 5524,
+        "expected_type": "number",
+        "tables": ["missing_pages_processed"],
+        "difficulty": "easy",
+        "category": "count"
+      },
+      {
+        "id": 9,
+        "question": "How many distinct patients have SAE discrepancies?",
+        "expected_answer": 5451,
+        "expected_type": "number",
+        "tables": ["esae_dashboard_processed"],
+        "difficulty": "easy",
+        "category": "count_distinct"
+      },
+      {
+        "id": 10,
+        "question": "How many subjects have open EDRR issues?",
+        "expected_answer": 893,
+        "expected_type": "number",
+        "tables": ["edrr_processed"],
+        "difficulty": "easy",
+        "category": "count"
+      }
+    ],
+    "medium": [
+      {
+        "id": 11,
+        "question": "Which study has the most MedDRA coding records?",
+        "expected_answer": "Study 4",
+        "expected_type": "string",
+        "tables": ["meddra_processed"],
+        "difficulty": "medium",
+        "category": "group_by_max"
+      },
+      {
+        "id": 12,
+        "question": "How many MedDRA terms are still uncoded?",
+        "expected_answer": 416,
+        "expected_type": "number",
+        "tables": ["meddra_processed"],
+        "difficulty": "medium",
+        "category": "count_filter"
+      },
+      {
+        "id": 13,
+        "question": "Which study has the most SAE discrepancies?",
+        "expected_answer": "Study 4",
+        "expected_type": "string",
+        "tables": ["esae_dashboard_processed"],
+        "difficulty": "medium",
+        "category": "group_by_max"
+      },
+      {
+        "id": 14,
+        "question": "How many SAE reviews are still pending?",
+        "expected_answer": 5130,
+        "expected_type": "number",
+        "tables": ["esae_dashboard_processed"],
+        "difficulty": "medium",
+        "category": "count_filter"
+      },
+      {
+        "id": 15,
+        "question": "How many distinct countries have SAE discrepancies?",
+        "expected_answer": 59,
+        "expected_type": "number",
+        "tables": ["esae_dashboard_processed"],
+        "difficulty": "medium",
+        "category": "count_distinct"
+      },
+      {
+        "id": 16,
+        "question": "Which study has the most missing pages?",
+        "expected_answer": "Study 22",
+        "expected_type": "string",
+        "tables": ["missing_pages_processed"],
+        "difficulty": "medium",
+        "category": "group_by_max"
+      },
+      {
+        "id": 17,
+        "question": "What is the maximum number of issues per subject in EDRR?",
+        "expected_answer": 17,
+        "expected_type": "number",
+        "tables": ["edrr_processed"],
+        "difficulty": "medium",
+        "category": "max"
+      },
+      {
+        "id": 18,
+        "question": "How many distinct subjects have missing pages?",
+        "expected_answer": 2015,
+        "expected_type": "number",
+        "tables": ["missing_pages_processed"],
+        "difficulty": "medium",
+        "category": "count_distinct"
+      },
+      {
+        "id": 19,
+        "question": "Which country has the most SAE discrepancies (excluding None)?",
+        "expected_answer": "USA",
+        "expected_type": "string",
+        "tables": ["esae_dashboard_processed"],
+        "difficulty": "medium",
+        "category": "group_by_max_filter"
+      },
+      {
+        "id": 20,
+        "question": "How many distinct sites have SAE discrepancies?",
+        "expected_answer": 1081,
+        "expected_type": "number",
+        "tables": ["esae_dashboard_processed"],
+        "difficulty": "medium",
+        "category": "count_distinct"
+      }
+    ],
+    "hard": [
+      {
+        "id": 21,
+        "question": "What percentage of MedDRA terms are coded?",
+        "expected_answer": 99.38,
+        "expected_type": "percentage",
+        "tolerance": 0.5,
+        "tables": ["meddra_processed"],
+        "difficulty": "hard",
+        "category": "percentage"
+      },
+      {
+        "id": 22,
+        "question": "Which study has the highest average issues per subject in EDRR?",
+        "expected_answer": "Study 16",
+        "expected_type": "string",
+        "tables": ["edrr_processed", "study_metrics"],
+        "difficulty": "hard",
+        "category": "avg_group"
+      },
+      {
+        "id": 23,
+        "question": "How many SAE discrepancies have both review completed and no action required?",
+        "expected_answer": 8500,
+        "expected_type": "number",
+        "tolerance": 500,
+        "tables": ["esae_dashboard_processed"],
+        "difficulty": "hard",
+        "category": "multi_filter"
+      },
+      {
+        "id": 24,
+        "question": "List the top 3 studies by WHODD drug coding records",
+        "expected_answer": ["Study 21", "Study 4", "Study 25"],
+        "expected_type": "list",
+        "tables": ["whodd_processed"],
+        "difficulty": "hard",
+        "category": "top_n"
+      },
+      {
+        "id": 25,
+        "question": "What is the total number of coding records (MedDRA + WHODD) for Study 4?",
+        "expected_answer": 56185,
+        "expected_type": "number",
+        "tolerance": 100,
+        "tables": ["meddra_processed", "whodd_processed"],
+        "difficulty": "hard",
+        "category": "multi_table_sum"
+      }
+    ]
+  }
+}

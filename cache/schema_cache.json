@@ -1,0 +1,854 @@
+{
+  "_table_metadata": {
+    "name": "_table_metadata",
+    "columns": [
+      {
+        "name": "table_name",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      },
+      {
+        "name": "row_count",
+        "data_type": "bigint",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      },
+      {
+        "name": "column_count",
+        "data_type": "bigint",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      },
+      {
+        "name": "columns",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      }
+    ],
+    "row_count": 8,
+    "primary_keys": null,
+    "foreign_keys": null,
+    "category": "metadata",
+    "study_number": "",
+    "description": "System table containing metadata about all loaded tables including study number, category, row count, and column list. Use this to query information ABOUT the database structure."
+  },
+  "edrr_processed": {
+    "name": "edrr_processed",
+    "columns": [
+      {
+        "name": "study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 21"
+        ],
+        "description": ""
+      },
+      {
+        "name": "subject",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Subject 11913",
+          "Subject 27371",
+          "Subject 7446"
+        ],
+        "description": ""
+      },
+      {
+        "name": "total_open_issue_count_per_subject",
+        "data_type": "bigint",
+        "is_nullable": true,
+        "sample_values": [
+          1
+        ],
+        "description": ""
+      },
+      {
+        "name": "_source_study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 21"
+        ],
+        "description": ""
+      }
+    ],
+    "row_count": 893,
+    "primary_keys": [],
+    "foreign_keys": [],
+    "category": "",
+    "study_number": "",
+    "description": ""
+  },
+  "esae_dashboard_processed": {
+    "name": "esae_dashboard_processed",
+    "columns": [
+      {
+        "name": "discrepancy_id",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "68260",
+          "68584",
+          "68582"
+        ],
+        "description": ""
+      },
+      {
+        "name": "study_id",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 21"
+        ],
+        "description": ""
+      },
+      {
+        "name": "country",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "AUS",
+          "USA"
+        ],
+        "description": ""
+      },
+      {
+        "name": "site",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Site 1336",
+          "Site 1114"
+        ],
+        "description": ""
+      },
+      {
+        "name": "patient_id",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Subject 17059",
+          "Subject 20377"
+        ],
+        "description": ""
+      },
+      {
+        "name": "form_name",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Form 1"
+        ],
+        "description": ""
+      },
+      {
+        "name": "discrepancy_created_timestamp_in_dashboard",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "2025-10-24 20:52:29",
+          "2025-11-04 21:12:10",
+          "2025-10-24 20:53:43"
+        ],
+        "description": ""
+      },
+      {
+        "name": "review_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Pending for Review",
+          "Review in Progress"
+        ],
+        "description": ""
+      },
+      {
+        "name": "action_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      },
+      {
+        "name": "_source_study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 21"
+        ],
+        "description": ""
+      },
+      {
+        "name": "case_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      }
+    ],
+    "row_count": 17098,
+    "primary_keys": [],
+    "foreign_keys": [],
+    "category": "",
+    "study_number": "",
+    "description": ""
+  },
+  "esae_processed": {
+    "name": "esae_processed",
+    "columns": [
+      {
+        "name": "discrepancy_id",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "68260",
+          "68584",
+          "68582"
+        ],
+        "description": ""
+      },
+      {
+        "name": "study_id",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 21"
+        ],
+        "description": ""
+      },
+      {
+        "name": "country",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "AUS",
+          "USA"
+        ],
+        "description": ""
+      },
+      {
+        "name": "site",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Site 1336",
+          "Site 1114"
+        ],
+        "description": ""
+      },
+      {
+        "name": "patient_id",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Subject 17059",
+          "Subject 20377"
+        ],
+        "description": ""
+      },
+      {
+        "name": "form_name",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Form 1"
+        ],
+        "description": ""
+      },
+      {
+        "name": "discrepancy_created_timestamp_in_dashboard",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "2025-10-24 20:52:29",
+          "2025-11-04 21:12:10",
+          "2025-10-24 20:53:43"
+        ],
+        "description": ""
+      },
+      {
+        "name": "review_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Pending for Review",
+          "Review in Progress"
+        ],
+        "description": ""
+      },
+      {
+        "name": "action_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      },
+      {
+        "name": "_source_study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 21"
+        ],
+        "description": ""
+      },
+      {
+        "name": "case_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      }
+    ],
+    "row_count": 17098,
+    "primary_keys": [],
+    "foreign_keys": [],
+    "category": "",
+    "study_number": "",
+    "description": ""
+  },
+  "meddra_processed": {
+    "name": "meddra_processed",
+    "columns": [
+      {
+        "name": "meddra_coding_report",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "MedDRA Coding Report"
+        ],
+        "description": ""
+      },
+      {
+        "name": "study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 19",
+          "Study 15"
+        ],
+        "description": ""
+      },
+      {
+        "name": "dictionary",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "MedDRAMedHistory",
+          "MedDRA"
+        ],
+        "description": ""
+      },
+      {
+        "name": "dictionary_version_number",
+        "data_type": "double precision",
+        "is_nullable": true,
+        "sample_values": [
+          28.1
+        ],
+        "description": ""
+      },
+      {
+        "name": "subject",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Subject 4890",
+          "Subject 4028",
+          "Subject 4"
+        ],
+        "description": ""
+      },
+      {
+        "name": "form_oid",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "AEG002",
+          "MHG001"
+        ],
+        "description": ""
+      },
+      {
+        "name": "logline",
+        "data_type": "bigint",
+        "is_nullable": true,
+        "sample_values": [
+          1,
+          2
+        ],
+        "description": ""
+      },
+      {
+        "name": "field_oid",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "MHTERM",
+          "AETERM"
+        ],
+        "description": ""
+      },
+      {
+        "name": "coding_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Coded Term",
+          "UnCoded Term"
+        ],
+        "description": ""
+      },
+      {
+        "name": "require_coding",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "No",
+          "Yes"
+        ],
+        "description": ""
+      },
+      {
+        "name": "_source_study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 19",
+          "Study 15"
+        ],
+        "description": ""
+      }
+    ],
+    "row_count": 66858,
+    "primary_keys": [],
+    "foreign_keys": [],
+    "category": "",
+    "study_number": "",
+    "description": ""
+  },
+  "missing_pages_processed": {
+    "name": "missing_pages_processed",
+    "columns": [
+      {
+        "name": "study_name",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 15"
+        ],
+        "description": ""
+      },
+      {
+        "name": "sitegroupname_countryname_",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "USA"
+        ],
+        "description": ""
+      },
+      {
+        "name": "sitenumber",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Site 2"
+        ],
+        "description": ""
+      },
+      {
+        "name": "subjectname",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Subject 2",
+          "Subject 3"
+        ],
+        "description": ""
+      },
+      {
+        "name": "overall_subject_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "On Trial",
+          "Screening"
+        ],
+        "description": ""
+      },
+      {
+        "name": "visit_level_subject_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Subject continuing"
+        ],
+        "description": ""
+      },
+      {
+        "name": "foldername",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Disposition",
+          "Baseline",
+          "Screening"
+        ],
+        "description": ""
+      },
+      {
+        "name": "visit_date",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "2025-10-14"
+        ],
+        "description": ""
+      },
+      {
+        "name": "form_type__summary_or_visit_",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Visit Level",
+          "Summary Page"
+        ],
+        "description": ""
+      },
+      {
+        "name": "formname",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Form 3",
+          "Form 5",
+          "Form 4"
+        ],
+        "description": ""
+      },
+      {
+        "name": "no___days_page_missing",
+        "data_type": "double precision",
+        "is_nullable": true,
+        "sample_values": [
+          31.0
+        ],
+        "description": ""
+      },
+      {
+        "name": "_source_study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 15"
+        ],
+        "description": ""
+      },
+      {
+        "name": "form_1_subject_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      }
+    ],
+    "row_count": 5524,
+    "primary_keys": [],
+    "foreign_keys": [],
+    "category": "",
+    "study_number": "",
+    "description": ""
+  },
+  "study_metrics": {
+    "name": "study_metrics",
+    "columns": [
+      {
+        "name": "study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 10",
+          "Study 11",
+          "Study 1"
+        ],
+        "description": ""
+      },
+      {
+        "name": "total_issues",
+        "data_type": "bigint",
+        "is_nullable": true,
+        "sample_values": [
+          0,
+          1,
+          3
+        ],
+        "description": ""
+      },
+      {
+        "name": "avg_issues",
+        "data_type": "double precision",
+        "is_nullable": true,
+        "sample_values": [
+          0.0,
+          1.0,
+          2.1785714285714284
+        ],
+        "description": ""
+      },
+      {
+        "name": "max_issues",
+        "data_type": "bigint",
+        "is_nullable": true,
+        "sample_values": [
+          0,
+          1,
+          6
+        ],
+        "description": ""
+      },
+      {
+        "name": "meddra_records",
+        "data_type": "double precision",
+        "is_nullable": true,
+        "sample_values": [
+          0.0,
+          259.0,
+          3.0
+        ],
+        "description": ""
+      },
+      {
+        "name": "esae_records",
+        "data_type": "double precision",
+        "is_nullable": true,
+        "sample_values": [
+          0.0,
+          3.0,
+          700.0
+        ],
+        "description": ""
+      }
+    ],
+    "row_count": 22,
+    "primary_keys": [],
+    "foreign_keys": [],
+    "category": "",
+    "study_number": "",
+    "description": ""
+  },
+  "visit_projection_processed": {
+    "name": "visit_projection_processed",
+    "columns": [
+      {
+        "name": "country",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "AUS",
+          "ISR"
+        ],
+        "description": ""
+      },
+      {
+        "name": "site",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Site 493",
+          "Site 109",
+          "Site 467"
+        ],
+        "description": ""
+      },
+      {
+        "name": "subject",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Subject 4887",
+          "Subject 3553",
+          "Subject 839"
+        ],
+        "description": ""
+      },
+      {
+        "name": "visit",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "RANDOMIZATION",
+          "CYCLE1DAY29"
+        ],
+        "description": ""
+      },
+      {
+        "name": "projected_date",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "2025-11-04",
+          "2025-10-11",
+          "2025-08-04"
+        ],
+        "description": ""
+      },
+      {
+        "name": "__days_outstanding",
+        "data_type": "double precision",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      },
+      {
+        "name": "_source_study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 19"
+        ],
+        "description": ""
+      },
+      {
+        "name": "actual_date",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      },
+      {
+        "name": "__days_outstanding__today___projected_date_",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [],
+        "description": ""
+      }
+    ],
+    "row_count": 871,
+    "primary_keys": [],
+    "foreign_keys": [],
+    "category": "",
+    "study_number": "",
+    "description": ""
+  },
+  "whodd_processed": {
+    "name": "whodd_processed",
+    "columns": [
+      {
+        "name": "whodrug_coding_report",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "WHODrug Coding Report"
+        ],
+        "description": ""
+      },
+      {
+        "name": "study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 19"
+        ],
+        "description": ""
+      },
+      {
+        "name": "dictionary",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "WHODrug-Global-B3"
+        ],
+        "description": ""
+      },
+      {
+        "name": "dictionary_version_number",
+        "data_type": "double precision",
+        "is_nullable": true,
+        "sample_values": [
+          202509.0
+        ],
+        "description": ""
+      },
+      {
+        "name": "subject",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Subject 4890",
+          "Subject 4891",
+          "Subject 4899"
+        ],
+        "description": ""
+      },
+      {
+        "name": "form_oid",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "ZAG001"
+        ],
+        "description": ""
+      },
+      {
+        "name": "logline",
+        "data_type": "bigint",
+        "is_nullable": true,
+        "sample_values": [
+          1
+        ],
+        "description": ""
+      },
+      {
+        "name": "field_oid",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "ZATRT"
+        ],
+        "description": ""
+      },
+      {
+        "name": "coding_status",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Coded Term"
+        ],
+        "description": ""
+      },
+      {
+        "name": "require_coding",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "No"
+        ],
+        "description": ""
+      },
+      {
+        "name": "_source_study",
+        "data_type": "text",
+        "is_nullable": true,
+        "sample_values": [
+          "Study 19"
+        ],
+        "description": ""
+      }
+    ],
+    "row_count": 306702,
+    "primary_keys": [],
+    "foreign_keys": [],
+    "category": "",
+    "study_number": "",
+    "description": ""
+  }
+}

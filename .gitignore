@@ -33,10 +33,11 @@ wheels/
 # Virtual environments
 novartis/
 venv/
+clinical_trial_graph.graphml 
 ENV/
 env/
 .venv/
-
+myenv/
 # IDE
 .vscode/
 .idea/
@@ -72,3 +73,6 @@ NEST 2.0 Data files_Anonymized/
 *.db
 *.sqlite3
 .pytest_cache
+# Documentation and reference files (not for repo)
+agents_desc.txt
+user_req.txt
