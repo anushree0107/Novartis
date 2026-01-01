@@ -232,14 +232,26 @@ The system uses Groq's LLM models:
 ### Running Evaluations
 
 ```bash
-# Run easy tests
-python run_easy_tests_new.py
+# List all available tests
+python -m sage_bench.run_evaluation --list
 
-# Run medium/hard tests
-python run_medium_hard_tests.py
+# Run by difficulty
+python -m sage_bench.run_evaluation --easy              # Easy tests only
+python -m sage_bench.run_evaluation --medium            # Medium tests only
+python -m sage_bench.run_evaluation --hard              # Hard tests only
+python -m sage_bench.run_evaluation --easy --medium     # Easy + Medium
+python -m sage_bench.run_evaluation --all               # All tests
 
-# Run full evaluation
-python run_new_tests.py
+# Run specific tests by ID
+python -m sage_bench.run_evaluation --ids 1 2 3         # Specific IDs
+python -m sage_bench.run_evaluation --ids 1-5 10-15     # ID ranges
+
+# Run by category
+python -m sage_bench.run_evaluation --category count aggregation
+
+# Options
+python -m sage_bench.run_evaluation --all --quiet       # Minimal output
+python -m sage_bench.run_evaluation --all -o results.json  # Custom output path
 ```
 
 ### Benchmark File
