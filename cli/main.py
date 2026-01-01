@@ -134,44 +134,85 @@ def query(
     
     # Display results
     if result.success and result.sql:
-        console.print("\n[bold green]Generated SQL:[/bold green]")
-        console.print(Syntax(result.sql, "sql", theme="monokai", line_numbers=True))
+        # SQL Query Panel
+        console.print()
+        sql_syntax = Syntax(result.sql.strip(), "sql", theme="monokai", line_numbers=True, word_wrap=True)
+        console.print(Panel(
+            sql_syntax,
+            title="[bold cyan]🔍 Generated SQL[/bold cyan]",
+            border_style="cyan",
+            padding=(1, 2)
+        ))
         
         if result.execution_result and result.execution_result.get('success'):
             data = result.execution_result.get('data', [])
             columns = result.execution_result.get('columns', [])
             row_count = result.execution_result.get('row_count', 0)
             
-            console.print(f"\n[bold green]Results: {row_count} rows[/bold green]")
-            
+            # Results Table Panel
             if data and columns:
-                table = Table(title="Query Results (first 10 rows)")
+                table = Table(
+                    show_header=True,
+                    header_style="bold magenta",
+                    border_style="blue",
+                    title_style="bold white",
+                    row_styles=["", "dim"]
+                )
                 for col in columns:
-                    table.add_column(str(col)[:30], overflow="fold")
+                    table.add_column(str(col)[:30], overflow="fold", style="cyan")
                 
                 for row in data[:10]:
-                    table.add_row(*[str(v)[:50] if v else "NULL" for v in row.values()])
+                    table.add_row(*[str(v)[:50] if v is not None else "[dim]NULL[/dim]" for v in row.values()])
                 
-                console.print(table)
-                
+                result_content = table
                 if row_count > 10:
-                    console.print(f"[dim]... and {row_count - 10} more rows[/dim]")
-            
-            # Display natural language explanation
-            if explain and result.explanation:
-                console.print("\n" + "="*60)
-                console.print(Panel.fit(
-                    result.explanation,
-                    title="[bold green]📊 Answer[/bold green]",
+                    console.print(Panel(
+                        result_content,
+                        title=f"[bold green]📊 Query Results[/bold green] [dim]({row_count} total rows, showing first 10)[/dim]",
+                        border_style="green",
+                        padding=(1, 1)
+                    ))
+                else:
+                    console.print(Panel(
+                        result_content,
+                        title=f"[bold green]📊 Query Results[/bold green] [dim]({row_count} rows)[/dim]",
+                        border_style="green",
+                        padding=(1, 1)
+                    ))
+            else:
+                console.print(Panel(
+                    f"[bold]{row_count}[/bold] rows returned (no displayable data)",
+                    title="[bold green]📊 Query Results[/bold green]",
                     border_style="green"
                 ))
+            
+            # Natural Language Explanation Panel
+            if explain and result.explanation:
+                console.print(Panel(
+                    f"[white]{result.explanation}[/white]",
+                    title="[bold yellow]💡 Answer[/bold yellow]",
+                    border_style="yellow",
+                    padding=(1, 2)
+                ))
         elif result.execution_result:
-            console.print(f"\n[yellow]Execution error: {result.execution_result.get('error')}[/yellow]")
+            console.print(Panel(
+                f"[red]{result.execution_result.get('error')}[/red]",
+                title="[bold red]❌ Execution Error[/bold red]",
+                border_style="red"
+            ))
     else:
-        console.print(f"\n[red]Query failed: {result.error}[/red]")
+        console.print(Panel(
+            f"[red]{result.error}[/red]",
+            title="[bold red]❌ Query Failed[/bold red]",
+            border_style="red"
+        ))
     
-    # Show metrics
-    console.print(f"\n[dim]Metrics: {result.total_tokens} tokens, {result.total_time:.2f}s[/dim]")
+    # Metrics footer
+    console.print(Panel(
+        f"[dim]⏱️  {result.total_time:.2f}s  •  🎫 {result.total_tokens:,} tokens[/dim]",
+        border_style="dim",
+        padding=(0, 1)
+    ))
 
 
 @app.command()
@@ -239,43 +280,67 @@ Just type your question to query the database!
                     question=question,
                     num_candidates=2,
                     num_unit_tests=3,
-                    execute_result=True
+                    execute_result=True,
+                    explain_result=True
                 )
             
             if result.success and result.sql:
-                console.print("\n[bold]SQL:[/bold]")
-                console.print(Syntax(result.sql, "sql", theme="monokai"))
+                # SQL Panel
+                sql_syntax = Syntax(result.sql.strip(), "sql", theme="monokai", line_numbers=True, word_wrap=True)
+                console.print(Panel(
+                    sql_syntax,
+                    title="[bold cyan]🔍 Generated SQL[/bold cyan]",
+                    border_style="cyan",
+                    padding=(1, 2)
+                ))
                 
                 if result.execution_result and result.execution_result.get('success'):
                     data = result.execution_result.get('data', [])
                     row_count = result.execution_result.get('row_count', 0)
                     columns = result.execution_result.get('columns', [])
                     
-                    console.print(f"\n[green]{row_count} rows returned[/green]")
-                    
                     if data:
-                        table = Table()
+                        table = Table(
+                            show_header=True,
+                            header_style="bold magenta",
+                            border_style="blue",
+                            row_styles=["", "dim"]
+                        )
                         for col in columns[:8]:  # Limit columns
-                            table.add_column(str(col)[:20])
+                            table.add_column(str(col)[:20], style="cyan")
                         
                         for row in data[:5]:  # Limit rows
                             values = list(row.values())[:8]
-                            table.add_row(*[str(v)[:30] if v else "NULL" for v in values])
+                            table.add_row(*[str(v)[:30] if v is not None else "[dim]NULL[/dim]" for v in values])
                         
-                        console.print(table)
-                        
-                        if row_count > 5:
-                            console.print(f"[dim]... and {row_count - 5} more rows[/dim]")
+                        title_suffix = f" [dim](showing 5 of {row_count})[/dim]" if row_count > 5 else f" [dim]({row_count} rows)[/dim]"
+                        console.print(Panel(
+                            table,
+                            title=f"[bold green]📊 Query Results[/bold green]{title_suffix}",
+                            border_style="green",
+                            padding=(1, 1)
+                        ))
                         
                         # Show explanation in interactive mode
                         if result.explanation:
-                            console.print(Panel.fit(
-                                result.explanation,
-                                title="[bold green]📊 Answer[/bold green]",
-                                border_style="green"
+                            console.print(Panel(
+                                f"[white]{result.explanation}[/white]",
+                                title="[bold yellow]💡 Answer[/bold yellow]",
+                                border_style="yellow",
+                                padding=(1, 2)
                             ))
+                    else:
+                        console.print(Panel(
+                            f"[bold]{row_count}[/bold] rows returned",
+                            title="[bold green]📊 Query Results[/bold green]",
+                            border_style="green"
+                        ))
             else:
-                console.print(f"[red]Error: {result.error}[/red]")
+                console.print(Panel(
+                    f"[red]{result.error}[/red]",
+                    title="[bold red]❌ Error[/bold red]",
+                    border_style="red"
+                ))
                 
         except KeyboardInterrupt:
             console.print("\n[yellow]Use /quit to exit[/yellow]")
