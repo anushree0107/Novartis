@@ -3,6 +3,7 @@ Data/*.zip
 myenv/
 __pycache__
 clinical_trial_graph.graphml
+
 # Environment variables - NEVER commit these
 .env
 .env.local
@@ -36,6 +37,7 @@ venv/
 ENV/
 env/
 .venv/
+nov
 
 # IDE
 .vscode/
@@ -53,6 +55,7 @@ env/
 preprocessing_cache.pkl
 lsh_index.pkl
 vector_store.pkl
+.pytest_cache/
 
 # Logs
 *.log
@@ -71,4 +74,6 @@ NEST 2.0 Data files_Anonymized/
 # Database
 *.db
 *.sqlite3
-.pytest_cache
+
+# Dashboard folder (unused)
+dashboard/
