@@ -1,10 +1,11 @@
 """
-CHESS Text-to-SQL System
+NEXUS Text-to-SQL System
 ========================
+Natural language EXecution and Understanding System
 A multi-agent framework for clinical trial data querying.
 
 Usage:
-    from chess_sql import CHESSPipeline, create_pipeline
+    from nexus_sql import NexusPipeline, create_pipeline
     
     pipeline = create_pipeline()
     result = pipeline.run("How many patients are in Study 1?")
@@ -16,7 +17,7 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from pipeline.orchestrator import CHESSPipeline, PipelineResult, create_pipeline
+from pipeline.orchestrator import NexusPipeline, PipelineResult, create_pipeline
 from agents import (
     InformationRetrieverAgent,
     SchemaSelectorAgent,
@@ -29,7 +30,7 @@ from preprocessing.indexer import DatabasePreprocessor, preprocessor
 
 __version__ = "1.0.0"
 __all__ = [
-    'CHESSPipeline',
+    'NexusPipeline',
     'PipelineResult', 
     'create_pipeline',
     'InformationRetrieverAgent',

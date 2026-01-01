@@ -1,5 +1,5 @@
 """
-CHESS Pipeline Orchestrator
+NEXUS Pipeline Orchestrator
 Coordinates all 5 agents in sequence for Text-to-SQL synthesis
 """
 from typing import Dict, Any, Optional
@@ -23,7 +23,7 @@ from config.settings import GROQ_API_KEY
 
 @dataclass
 class PipelineResult:
-    """Result from the complete CHESS pipeline"""
+    """Result from the complete NEXUS pipeline"""
     success: bool
     sql: str
     question: str
@@ -48,7 +48,7 @@ class PipelineResult:
         """Generate a summary of the pipeline execution"""
         lines = [
             f"\n{'='*60}",
-            f"CHESS Pipeline Result",
+            f"NEXUS Pipeline Result",
             f"{'='*60}",
             f"Question: {self.question}",
             f"Success: {self.success}",
@@ -97,9 +97,10 @@ class PipelineResult:
         return "\n".join(lines)
 
 
-class CHESSPipeline:
+class NexusPipeline:
     """
-    CHESS Text-to-SQL Pipeline
+    NEXUS Text-to-SQL Pipeline
+    Natural language EXecution and Understanding System
     
     Orchestrates 5 agents:
     1. Information Retriever (IR) - Extracts keywords, entities, context
@@ -308,7 +309,7 @@ class CHESSPipeline:
         }
 
 
-def create_pipeline(verbose: bool = True) -> CHESSPipeline:
+def create_pipeline(verbose: bool = True) -> NexusPipeline:
     """Factory function to create a configured pipeline"""
     llm = GroqLLMClient() if GROQ_API_KEY else None
 
@@ -318,7 +319,7 @@ def create_pipeline(verbose: bool = True) -> CHESSPipeline:
     # Try to load preprocessor cache
     preprocessor.load_cache()
 
-    return CHESSPipeline(
+    return NexusPipeline(
         llm_client=llm,
         verbose=verbose
     )

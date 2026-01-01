@@ -1,5 +1,5 @@
 """
-CHESS Text-to-SQL CLI Interface
+NEXUS Text-to-SQL CLI Interface
 Command-line interface for the clinical trial data query system
 """
 import sys
@@ -23,7 +23,7 @@ from database.schema_manager import schema_manager
 from preprocessing.indexer import preprocessor
 
 
-app = typer.Typer(help="CHESS Text-to-SQL for Clinical Trial Data")
+app = typer.Typer(help="NEXUS Text-to-SQL for Clinical Trial Data")
 console = Console()
 
 
@@ -34,7 +34,7 @@ def setup():
     Run this first before querying.
     """
     console.print(Panel.fit(
-        "[bold blue]CHESS Text-to-SQL Setup[/bold blue]\n"
+        "[bold blue]NEXUS Text-to-SQL Setup[/bold blue]\n"
         "This will load data and build indices.",
         title="Setup"
     ))
@@ -106,7 +106,7 @@ def query(
     
     console.print(Panel.fit(
         f"[bold]Question:[/bold] {question}",
-        title="CHESS Query"
+        title="NEXUS Query"
     ))
     
     try:
@@ -223,7 +223,7 @@ def interactive():
     from pipeline.orchestrator import create_pipeline
     
     console.print(Panel.fit(
-        "[bold blue]CHESS Interactive Mode[/bold blue]\n"
+        "[bold blue]NEXUS Interactive Mode[/bold blue]\n"
         "Type your questions in natural language.\n"
         "Commands: /quit, /help, /schema, /tables",
         title="Interactive Query Session"

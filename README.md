@@ -1,6 +1,8 @@
-# CHESS Text-to-SQL for Clinical Trial Data
+# NEXUS Text-to-SQL for Clinical Trial Data
 
-A multi-agent Text-to-SQL system based on the CHESS (Contextual Harnessing for Efficient SQL Synthesis) framework, designed for querying clinical trial data using natural language.
+**NEXUS** - **N**atural language **EX**ecution and **U**nderstanding **S**ystem
+
+A multi-agent Text-to-SQL system designed for querying clinical trial data using natural language.
 
 ## Architecture
 
@@ -104,7 +106,7 @@ python -m cli.main interactive
 ### 4. Python API
 
 ```python
-from chess_sql import create_pipeline
+from nexus_sql import create_pipeline
 
 # Create pipeline
 pipeline = create_pipeline()
@@ -116,6 +118,30 @@ result = pipeline.run("How many open queries are there by site?")
 print(result.sql)
 print(result.execution_result)
 print(result.summary())
+```
+
+### 5. REST API
+
+```bash
+# Start the API server
+python -m api.server
+
+# Or with uvicorn
+uvicorn api.server:app --reload --port 8000
+```
+
+**Endpoints:**
+- `POST /query` - Run a natural language query
+- `POST /query/batch` - Run multiple queries
+- `GET /health` - Health check
+- `GET /schema` - Get database schema
+- `GET /docs` - Swagger UI documentation
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "How many studies are there?", "execute": true}'
 ```
 
 ## Project Structure
@@ -138,16 +164,15 @@ Nova-text-to-sql/
 │   └── indexer.py             # LSH and Vector DB indices
 ├── pipeline/
 │   └── orchestrator.py        # Pipeline coordinator
-├── sage_bench/                 # SAGE-BENCH evaluation framework
-│   ├── evaluator.py           # Evaluation logic
-│   ├── new_testbench.json     # Test cases (25 questions)
-│   └── testbench.json         # Legacy testbench
+├── nexus_bench/                # NEXUS-BENCH evaluation framework
+│   ├── run_evaluation.py      # Evaluation runner
+│   └── new_testbench.json     # Test cases (25 questions)
 ├── cli/
 │   └── main.py                # Command-line interface
 ├── utils/
 │   ├── llm_client.py          # Groq API client
 │   └── token_utils.py         # Token counting utilities
-├── chess_sql.py               # Main entry point
+├── nexus_sql.py               # Main entry point
 ├── requirements.txt
 └── README.md
 ```
@@ -200,9 +225,9 @@ The system uses Groq's LLM models:
 - `llama-3.3-70b-versatile` - For SQL generation and complex reasoning
 - `llama-3.1-8b-instant` - For fast evaluation and filtering tasks
 
-## SAGE-BENCH Evaluation
+## NEXUS-BENCH Evaluation
 
-**SAGE-BENCH** (SQL Accuracy and Generation Evaluation Benchmark) is our comprehensive evaluation framework for testing Text-to-SQL systems on clinical trial data.
+**NEXUS-BENCH** (Natural language EXecution and Understanding System Benchmark) is our comprehensive evaluation framework for testing Text-to-SQL systems on clinical trial data.
 
 ### Overview
 
@@ -233,30 +258,30 @@ The system uses Groq's LLM models:
 
 ```bash
 # List all available tests
-python -m sage_bench.run_evaluation --list
+python -m nexus_bench.run_evaluation --list
 
 # Run by difficulty
-python -m sage_bench.run_evaluation --easy              # Easy tests only
-python -m sage_bench.run_evaluation --medium            # Medium tests only
-python -m sage_bench.run_evaluation --hard              # Hard tests only
-python -m sage_bench.run_evaluation --easy --medium     # Easy + Medium
-python -m sage_bench.run_evaluation --all               # All tests
+python -m nexus_bench.run_evaluation --easy              # Easy tests only
+python -m nexus_bench.run_evaluation --medium            # Medium tests only
+python -m nexus_bench.run_evaluation --hard              # Hard tests only
+python -m nexus_bench.run_evaluation --easy --medium     # Easy + Medium
+python -m nexus_bench.run_evaluation --all               # All tests
 
 # Run specific tests by ID
-python -m sage_bench.run_evaluation --ids 1 2 3         # Specific IDs
-python -m sage_bench.run_evaluation --ids 1-5 10-15     # ID ranges
+python -m nexus_bench.run_evaluation --ids 1 2 3         # Specific IDs
+python -m nexus_bench.run_evaluation --ids 1-5 10-15     # ID ranges
 
 # Run by category
-python -m sage_bench.run_evaluation --category count aggregation
+python -m nexus_bench.run_evaluation --category count aggregation
 
 # Options
-python -m sage_bench.run_evaluation --all --quiet       # Minimal output
-python -m sage_bench.run_evaluation --all -o results.json  # Custom output path
+python -m nexus_bench.run_evaluation --all --quiet       # Minimal output
+python -m nexus_bench.run_evaluation --all -o results.json  # Custom output path
 ```
 
 ### Benchmark File
 
-The benchmark is defined in `sage_bench/new_testbench.json` with structured test cases including:
+The benchmark is defined in `nexus_bench/new_testbench.json` with structured test cases including:
 - Natural language questions
 - Expected answers with types
 - Required tables

@@ -1,5 +1,5 @@
 """
-Preprocessing Module for CHESS Text-to-SQL System
+Preprocessing Module for NEXUS Text-to-SQL System
 
 This module handles:
 1. LSH (Locality Sensitive Hashing) indexing for database values - for entity retrieval

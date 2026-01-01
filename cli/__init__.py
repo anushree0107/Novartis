@@ -1,3 +1,3 @@
 """
-CLI module for CHESS Text-to-SQL
+CLI module for NEXUS Text-to-SQL
 """

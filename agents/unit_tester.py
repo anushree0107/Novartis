@@ -1,6 +1,6 @@
 """
 Unit Tester Agent (UT)
-CHESS Agent 4: Selects the best SQL candidate using unit tests
+NEXUS Agent 4: Selects the best SQL candidate using unit tests
 
 Tools:
 1. generate_unit_test - Generate unit tests to differentiate candidates

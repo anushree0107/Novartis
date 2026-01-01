@@ -1,5 +1,5 @@
 """
-Preprocessing module for CHESS Text-to-SQL
+Preprocessing module for NEXUS Text-to-SQL
 """
 from preprocessing.indexer import (
     DatabasePreprocessor,

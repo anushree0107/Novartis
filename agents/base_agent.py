@@ -1,6 +1,6 @@
 """
 Base Agent class for the Text-to-SQL pipeline
-Following CHESS architecture pattern with Tools
+Following NEXUS architecture pattern with Tools
 """
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional, Callable

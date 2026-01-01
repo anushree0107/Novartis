@@ -1,6 +1,6 @@
 """
 Result Explainer Agent (RE)
-CHESS Agent 5: Explains SQL query results in natural language
+NEXUS Agent 5: Explains SQL query results in natural language
 
 Tools:
 1. explain_results - Explain query results in clear natural language

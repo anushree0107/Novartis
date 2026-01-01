@@ -1,6 +1,6 @@
 """
 Information Retriever Agent (IR)
-CHESS Agent 1: Gathers relevant information related to input
+NEXUS Agent 1: Gathers relevant information related to input
 
 Tools:
 1. extract_keywords - Extract main keywords from natural language question
