@@ -1,6 +1,6 @@
 """
-Pipeline module for NEXUS Text-to-SQL
+Pipeline module for TRIALS Text-to-SQL
 """
-from pipeline.orchestrator import NexusPipeline, PipelineResult, create_pipeline
+from pipeline.orchestrator import TrialsPipeline, PipelineResult, create_pipeline
 
-__all__ = ['NexusPipeline', 'PipelineResult', 'create_pipeline']
+__all__ = ['TrialsPipeline', 'PipelineResult', 'create_pipeline']

@@ -1,6 +1,6 @@
 """
 Schema Selector Agent (SS)
-NEXUS Agent 2: Reduces schema size by selecting relevant tables and columns
+TRIALS Agent 2: Reduces schema size by selecting relevant tables and columns
 
 Tools:
 1. filter_column - Determine if a column is relevant to the query

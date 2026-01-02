@@ -1,3 +1,3 @@
 """
-NEXUS Text-to-SQL API
+TRIALS Text-to-SQL API
 """

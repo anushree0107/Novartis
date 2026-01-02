@@ -1,3 +1,3 @@
 """
-CLI module for NEXUS Text-to-SQL
+CLI module for TRIALS Text-to-SQL
 """

@@ -1,7 +1,7 @@
 """
-NEXUS Text-to-SQL API Server
+TRIALS Text-to-SQL API Server
 =============================
-A simple FastAPI server to run the NEXUS pipeline.
+A simple FastAPI server to run the TRIALS pipeline.
 
 Usage:
     # Start the server
@@ -28,13 +28,13 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 import time
 
-from nexus_sql import create_pipeline, NexusPipeline
+from trials_sql import create_pipeline, TrialsPipeline
 from database.connection import db_manager
 from database.schema_manager import schema_manager
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="NEXUS Text-to-SQL API",
+    title="TRIALS Text-to-SQL API",
     description="Convert natural language questions to SQL queries for clinical trial data",
     version="1.0.0"
 )
@@ -49,10 +49,10 @@ app.add_middleware(
 )
 
 # Global pipeline instance (initialized on first request)
-_pipeline: Optional[NexusPipeline] = None
+_pipeline: Optional[TrialsPipeline] = None
 
 
-def get_pipeline() -> NexusPipeline:
+def get_pipeline() -> TrialsPipeline:
     """Get or create the pipeline instance"""
     global _pipeline
     if _pipeline is None:
@@ -287,7 +287,7 @@ async def run_batch_query(request: BatchQueryRequest):
 async def root():
     """API root - returns basic info"""
     return {
-        "name": "NEXUS Text-to-SQL API",
+        "name": "TRIALS Text-to-SQL API",
         "version": "1.0.0",
         "docs": "/docs",
         "health": "/health"

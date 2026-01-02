@@ -1,5 +1,5 @@
 """
-Agents module - NEXUS multi-agent Text-to-SQL system
+Agents module - TRIALS multi-agent Text-to-SQL system
 
 5 Agents with their Tools:
 1. Information Retriever (IR): extract_keywords, retrieve_entity, retrieve_context

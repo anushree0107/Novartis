@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 """
-NEXUS-BENCH Evaluation Runner
-=============================
+TRIALS-BENCH Evaluation Runner
+==============================
 Run Text-to-SQL evaluation tests with flexible options.
 
 Usage:
-    python -m nexus_bench.run_evaluation --easy              # Run only easy tests
-    python -m nexus_bench.run_evaluation --medium            # Run only medium tests
-    python -m nexus_bench.run_evaluation --hard              # Run only hard tests
-    python -m nexus_bench.run_evaluation --all               # Run all tests
-    python -m nexus_bench.run_evaluation --easy --medium     # Run easy and medium
-    python -m nexus_bench.run_evaluation --ids 1 2 3         # Run specific test IDs
-    python -m nexus_bench.run_evaluation --ids 1-5           # Run test IDs 1 to 5
-    python -m nexus_bench.run_evaluation --category count    # Run tests by category
+    python -m trials_bench.run_evaluation --easy              # Run only easy tests
+    python -m trials_bench.run_evaluation --medium            # Run only medium tests
+    python -m trials_bench.run_evaluation --hard              # Run only hard tests
+    python -m trials_bench.run_evaluation --all               # Run all tests
+    python -m trials_bench.run_evaluation --easy --medium     # Run easy and medium
+    python -m trials_bench.run_evaluation --ids 1 2 3         # Run specific test IDs
+    python -m trials_bench.run_evaluation --ids 1-5           # Run test IDs 1 to 5
+    python -m trials_bench.run_evaluation --category count    # Run tests by category
 """
 import argparse
 import json
@@ -69,7 +69,7 @@ class EvaluationSummary:
 
 
 def load_testbench() -> Dict:
-    """Load the NEXUS-BENCH testbench"""
+    """Load the TRIALS-BENCH testbench"""
     if not TESTBENCH_PATH.exists():
         console.print(f"[red]Error: Testbench not found at {TESTBENCH_PATH}[/red]")
         sys.exit(1)
@@ -219,10 +219,10 @@ def run_single_test(pipeline, test: Dict) -> TestResult:
 
 def run_evaluation(tests: List[Dict], verbose: bool = True) -> tuple[List[TestResult], EvaluationSummary]:
     """Run evaluation on a list of tests"""
-    from nexus_sql import create_pipeline
+    from trials_sql import create_pipeline
     
     # Create pipeline
-    console.print("\n[bold blue]Initializing NEXUS Pipeline...[/bold blue]")
+    console.print("\n[bold blue]Initializing TRIALS Pipeline...[/bold blue]")
     pipeline = create_pipeline(verbose=False)
     
     results: List[TestResult] = []
@@ -297,7 +297,7 @@ def display_results(results: List[TestResult], summary: EvaluationSummary):
     """Display evaluation results in a formatted table"""
     
     # Results table
-    table = Table(title="NEXUS-BENCH Evaluation Results", show_header=True, header_style="bold magenta")
+    table = Table(title="TRIALS-BENCH Evaluation Results", show_header=True, header_style="bold magenta")
     table.add_column("ID", style="dim", width=4)
     table.add_column("Difficulty", width=8)
     table.add_column("Category", width=15)
@@ -366,17 +366,17 @@ def save_results(results: List[TestResult], summary: EvaluationSummary, output_p
 
 def main():
     parser = argparse.ArgumentParser(
-        description="NEXUS-BENCH: Natural language EXecution and Understanding System Benchmark",
+        description="TRIALS-BENCH: Text-to-SQL with Ranked Iterative Agent Learning and Selection Benchmark",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python -m nexus_bench.run_evaluation --easy              # Run easy tests only
-  python -m nexus_bench.run_evaluation --medium --hard     # Run medium and hard tests
-  python -m nexus_bench.run_evaluation --all               # Run all tests
-  python -m nexus_bench.run_evaluation --ids 1 2 3         # Run specific test IDs
-  python -m nexus_bench.run_evaluation --ids 1-5 10-15     # Run ID ranges
-  python -m nexus_bench.run_evaluation --category count    # Run by category
-  python -m nexus_bench.run_evaluation --list              # List all available tests
+  python -m trials_bench.run_evaluation --easy              # Run easy tests only
+  python -m trials_bench.run_evaluation --medium --hard     # Run medium and hard tests
+  python -m trials_bench.run_evaluation --all               # Run all tests
+  python -m trials_bench.run_evaluation --ids 1 2 3         # Run specific test IDs
+  python -m trials_bench.run_evaluation --ids 1-5 10-15     # Run ID ranges
+  python -m trials_bench.run_evaluation --category count    # Run by category
+  python -m trials_bench.run_evaluation --list              # List all available tests
         """
     )
     
@@ -406,7 +406,7 @@ Examples:
     # List tests mode
     if args.list:
         console.print(Panel(f"[bold]{testbench['name']}[/bold]\n{testbench['description']}", 
-                           title="NEXUS-BENCH", border_style="blue"))
+                           title="TRIALS-BENCH", border_style="blue"))
         
         table = Table(title="Available Tests", show_header=True)
         table.add_column("ID", width=4)
@@ -463,7 +463,7 @@ Examples:
     
     # Display header
     console.print(Panel(
-        f"[bold blue]NEXUS-BENCH Evaluation[/bold blue]\n"
+        f"[bold blue]TRIALS-BENCH Evaluation[/bold blue]\n"
         f"Running {len(tests)} test(s)...",
         border_style="blue"
     ))

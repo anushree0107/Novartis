@@ -1,6 +1,6 @@
 """
 Candidate Generator Agent (CG)
-NEXUS Agent 3: Generates and revises SQL query candidates
+TRIALS Agent 3: Generates and revises SQL query candidates
 
 Tools:
 1. generate_candidate_query - Generate a candidate SQL query using multi-step reasoning

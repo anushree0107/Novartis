@@ -1,6 +1,6 @@
-# NEXUS Text-to-SQL for Clinical Trial Data
+# TRIALS Text-to-SQL for Clinical Trial Data
 
-**NEXUS** - **N**atural language **EX**ecution and **U**nderstanding **S**ystem
+**TRIALS** - **T**ext-to-SQL with **R**anked **I**terative **A**gent **L**earning and **S**election
 
 A multi-agent Text-to-SQL system designed for querying clinical trial data using natural language.
 
@@ -184,7 +184,7 @@ python -m cli.main interactive
 ### 4. Python API
 
 ```python
-from nexus_sql import create_pipeline
+from trials_sql import create_pipeline
 
 # Create pipeline
 pipeline = create_pipeline()
@@ -242,7 +242,7 @@ Nova-text-to-sql/
 │   └── indexer.py             # LSH and Vector DB indices
 ├── pipeline/
 │   └── orchestrator.py        # Pipeline coordinator
-├── nexus_bench/                # NEXUS-BENCH evaluation framework
+├── trials_bench/               # TRIALS-BENCH evaluation framework
 │   ├── run_evaluation.py      # Evaluation runner
 │   └── new_testbench.json     # Test cases (25 questions)
 ├── cli/
@@ -250,7 +250,7 @@ Nova-text-to-sql/
 ├── utils/
 │   ├── llm_client.py          # Groq API client
 │   └── token_utils.py         # Token counting utilities
-├── nexus_sql.py               # Main entry point
+├── trials_sql.py              # Main entry point
 ├── requirements.txt
 └── README.md
 ```
@@ -303,9 +303,9 @@ The system uses Groq's LLM models:
 - `llama-3.3-70b-versatile` - For SQL generation and complex reasoning
 - `llama-3.1-8b-instant` - For fast evaluation and filtering tasks
 
-## NEXUS-BENCH Evaluation
+## TRIALS-BENCH Evaluation
 
-**NEXUS-BENCH** (Natural language EXecution and Understanding System Benchmark) is our comprehensive evaluation framework for testing Text-to-SQL systems on clinical trial data.
+**TRIALS-BENCH** (Text-to-SQL with Ranked Iterative Agent Learning and Selection Benchmark) is our comprehensive evaluation framework for testing Text-to-SQL systems on clinical trial data.
 
 ### Overview
 
@@ -336,30 +336,30 @@ The system uses Groq's LLM models:
 
 ```bash
 # List all available tests
-python -m nexus_bench.run_evaluation --list
+python -m trials_bench.run_evaluation --list
 
 # Run by difficulty
-python -m nexus_bench.run_evaluation --easy              # Easy tests only
-python -m nexus_bench.run_evaluation --medium            # Medium tests only
-python -m nexus_bench.run_evaluation --hard              # Hard tests only
-python -m nexus_bench.run_evaluation --easy --medium     # Easy + Medium
-python -m nexus_bench.run_evaluation --all               # All tests
+python -m trials_bench.run_evaluation --easy              # Easy tests only
+python -m trials_bench.run_evaluation --medium            # Medium tests only
+python -m trials_bench.run_evaluation --hard              # Hard tests only
+python -m trials_bench.run_evaluation --easy --medium     # Easy + Medium
+python -m trials_bench.run_evaluation --all               # All tests
 
 # Run specific tests by ID
-python -m nexus_bench.run_evaluation --ids 1 2 3         # Specific IDs
-python -m nexus_bench.run_evaluation --ids 1-5 10-15     # ID ranges
+python -m trials_bench.run_evaluation --ids 1 2 3         # Specific IDs
+python -m trials_bench.run_evaluation --ids 1-5 10-15     # ID ranges
 
 # Run by category
-python -m nexus_bench.run_evaluation --category count aggregation
+python -m trials_bench.run_evaluation --category count aggregation
 
 # Options
-python -m nexus_bench.run_evaluation --all --quiet       # Minimal output
-python -m nexus_bench.run_evaluation --all -o results.json  # Custom output path
+python -m trials_bench.run_evaluation --all --quiet       # Minimal output
+python -m trials_bench.run_evaluation --all -o results.json  # Custom output path
 ```
 
 ### Benchmark File
 
-The benchmark is defined in `nexus_bench/new_testbench.json` with structured test cases including:
+The benchmark is defined in `trials_bench/new_testbench.json` with structured test cases including:
 - Natural language questions
 - Expected answers with types
 - Required tables

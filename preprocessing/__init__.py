@@ -1,5 +1,5 @@
 """
-Preprocessing module for NEXUS Text-to-SQL
+Preprocessing module for TRIALS Text-to-SQL
 """
 from preprocessing.indexer import (
     DatabasePreprocessor,
