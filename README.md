@@ -6,37 +6,139 @@ A multi-agent Text-to-SQL system designed for querying clinical trial data using
 
 ## Architecture
 
-The system uses 4 specialized agents, each with specific tools:
+The system uses 5 specialized agents thinking in parallel and sequence to deliver accurate results.
+
+### System Overview
+
+```mermaid
+graph TD
+    %% Styling
+    classDef agent fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef subagent fill:#f3e5f5,stroke:#4a148c,stroke-width:1px,stroke-dasharray: 5 5;
+    classDef storage fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
+    classDef output fill:#ccff90,stroke:#33691e,stroke-width:2px;
+    classDef parallel fill:#e0f2f1,stroke:#004d40,stroke-width:2px,stroke-dasharray: 5 5;
+
+    User([User Question]) --> IR_Agent
+
+    subgraph Knowledge_Base [Knowledge Base]
+        LSH[(LSH Index)]
+        Vector[(Vector Store)]
+        DB[(PostgreSQL)]
+    end
+
+    subgraph IR_Agent [1. Information Retriever Agent]
+        direction TB
+        IR_KW[Extract Keywords]
+        IR_Ent[Retrieve Entities]
+        IR_Ctx[Retrieve Context]
+        
+        IR_KW --> IR_Ent
+        IR_KW --> IR_Ctx
+    end
+    
+    IR_Ent -.->|Search| LSH
+    IR_Ctx -.->|Search| Vector
+
+    IR_Agent -->|Keywords, Entities, Context| SS_Agent
+    
+    subgraph SS_Agent [2. Schema Selector Agent]
+        direction TB
+        SS_Filter[Filter Columns]
+        SS_Table[Select Tables]
+        SS_Col[Finalize Columns]
+        
+        SS_Filter --> SS_Table --> SS_Col
+    end
+
+    SS_Agent -->|Reduced Schema| CG_Agent
+
+    subgraph CG_Agent [3. Candidate Generator Agent]
+        direction TB
+        CG_Parallel[Parallel Generation]
+        
+        subgraph Strategies [Generation Strategies Parallel]
+            CG_Std[Standard]
+            CG_CoT[Chain-of-Thought]
+            CG_Decomp[Decomposition]
+        end
+        
+        CG_Revise[Revise & Fix]
+        
+        CG_Parallel --> CG_Std
+        CG_Parallel --> CG_CoT
+        CG_Parallel --> CG_Decomp
+        
+        CG_Std --> CG_Revise
+        CG_CoT --> CG_Revise
+        CG_Decomp --> CG_Revise
+    end
+
+    CG_Agent -->|SQL Candidates| UT_Agent
+
+    subgraph UT_Agent [4. Unit Tester Agent]
+        direction TB
+        UT_Gen[Generate Tests]
+        UT_Eval[Evaluate Candidates]
+        
+        UT_Gen -->|Unit Tests| UT_Eval
+    end
+
+    UT_Agent -->|Best Candidate| Exec[Execution Engine]
+    
+    Exec -.->|Run SQL| DB
+    DB -.->|Query Results| Exec
+    
+    Exec -->|SQL + Results| RE_Agent
+    
+    subgraph RE_Agent [5. Result Explainer Agent]
+        RE_Exp[Generate Explanation]
+    end
+
+    RE_Agent -->|Natural Language Answer| Output([Final Response])
+
+    %% Listeners/Classes
+    class IR_Agent,SS_Agent,CG_Agent,UT_Agent,RE_Agent agent;
+    class IR_KW,IR_Ent,IR_Ctx,SS_Filter,SS_Table,SS_Col,CG_Std,CG_CoT,CG_Decomp,CG_Revise,UT_Gen,UT_Eval,RE_Exp subagent;
+    class LSH,Vector,DB storage;
+    class Strategies parallel;
+    class Output output;
+```
 
 ### 1. Information Retriever Agent (IR)
 Gathers relevant information from the database and question.
-
 **Tools:**
-- `extract_keywords` - Extracts key terms from natural language using LLM
+- `extract_keywords` - Extracts key terms using LLM
 - `retrieve_entity` - Searches database values using LSH + edit distance
 - `retrieve_context` - Gets relevant schema descriptions from vector store
 
 ### 2. Schema Selector Agent (SS)
 Reduces schema size by selecting relevant tables and columns.
-
 **Tools:**
-- `filter_column` - Determines column relevance using lightweight LLM
-- `select_tables` - Selects necessary tables for the query
-- `select_columns` - Narrows down to essential columns per table
+- `filter_column` - Determines column relevance
+- `select_tables` - Selects necessary tables
+- `select_columns` - Narrows down to essential columns
 
 ### 3. Candidate Generator Agent (CG)
-Generates and refines SQL query candidates.
-
+Generates and refines SQL query candidates in parallel.
 **Tools:**
-- `generate_candidate_query` - Generates SQL using multiple strategies (standard, chain-of-thought, decomposition)
+- `generate_candidate_query` - Generates SQL using multiple parallel strategies:
+  - **Standard**: Direct generation
+  - **Chain-of-Thought**: Step-by-step reasoning
+  - **Decomposition**: Breaking down complex queries
 - `revise` - Fixes faulty queries based on execution errors
 
 ### 4. Unit Tester Agent (UT)
-Selects the best SQL candidate using unit tests.
-
+Selects the best SQL candidate using generated unit tests.
 **Tools:**
-- `generate_unit_test` - Creates tests to differentiate between candidates
-- `evaluate` - Evaluates candidates against unit tests
+- `generate_unit_test` - Creates synthetic tests to differentiate candidates
+- `evaluate` - Runs candidates against tests to find the most robust one
+
+### 5. Result Explainer Agent (RE)
+Converts the SQL execution results into a natural language response.
+**Tools:**
+- `explain_result` - Generates a user-friendly summary of the data
+
 
 ## Preprocessing
 
