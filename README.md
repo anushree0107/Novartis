@@ -81,49 +81,6 @@ flowchart LR
     style RE fill:#fce4ec,stroke:#c2185b,stroke-width:2px
 ```
 
-### Parallel Execution Details
-
-```mermaid
-flowchart TB
-    subgraph Stage1[Stage 1: Information Retrieval]
-        direction LR
-        A1[extract_keywords] 
-        A2[retrieve_entity]
-        A3[retrieve_context]
-    end
-
-    subgraph Stage2[Stage 2: Schema Selection]
-        direction LR
-        B1[filter_column]
-        B2[select_tables]
-        B3[select_columns]
-    end
-
-    subgraph Stage3[Stage 3: SQL Generation - PARALLEL]
-        direction LR
-        C1[Standard SQL]
-        C2[CoT SQL]
-        C3[Decomp SQL]
-    end
-
-    subgraph Stage4[Stage 4: Unit Testing - PARALLEL]
-        direction LR
-        D1[Test Candidate 1]
-        D2[Test Candidate 2]
-        D3[Test Candidate 3]
-    end
-
-    Stage1 --> Stage2
-    Stage2 --> Stage3
-    Stage3 --> Stage4
-    Stage4 --> E[Best SQL Selected]
-
-    style Stage1 fill:#e3f2fd,stroke:#1565c0
-    style Stage2 fill:#f3e5f5,stroke:#7b1fa2
-    style Stage3 fill:#e8f5e9,stroke:#2e7d32
-    style Stage4 fill:#fff3e0,stroke:#ef6c00
-```
-
 ### 1. Information Retriever Agent (IR)
 Gathers relevant information from the database and question.
 **Tools:**
