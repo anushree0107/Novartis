@@ -6,103 +6,122 @@ A multi-agent Text-to-SQL system designed for querying clinical trial data using
 
 ## Architecture
 
-The system uses 5 specialized agents thinking in parallel and sequence to deliver accurate results.
+The system uses 4 main agents with sub-agents/tools working in parallel to deliver accurate results.
 
 ### System Overview
 
 ```mermaid
-graph TD
-    %% Styling
-    classDef agent fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef subagent fill:#f3e5f5,stroke:#4a148c,stroke-width:1px,stroke-dasharray: 5 5;
-    classDef storage fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
-    classDef output fill:#ccff90,stroke:#33691e,stroke-width:2px;
-    classDef parallel fill:#e0f2f1,stroke:#004d40,stroke-width:2px,stroke-dasharray: 5 5;
+flowchart LR
+    User([User Query]) --> IR
 
-    User([User Question]) --> IR_Agent
-
-    subgraph Knowledge_Base [Knowledge Base]
-        LSH[(LSH Index)]
-        Vector[(Vector Store)]
-        DB[(PostgreSQL)]
-    end
-
-    subgraph IR_Agent [1. Information Retriever Agent]
+    subgraph IR[1. Information Retriever]
         direction TB
-        IR_KW[Extract Keywords]
-        IR_Ent[Retrieve Entities]
-        IR_Ctx[Retrieve Context]
-        
-        IR_KW --> IR_Ent
-        IR_KW --> IR_Ctx
+        IR_T[Tools run in PARALLEL]
+        IR1[extract_keywords]
+        IR2[retrieve_entity]
+        IR3[retrieve_context]
+        IR_T --> IR1
+        IR_T --> IR2
+        IR_T --> IR3
     end
-    
-    IR_Ent -.->|Search| LSH
-    IR_Ctx -.->|Search| Vector
 
-    IR_Agent -->|Keywords, Entities, Context| SS_Agent
-    
-    subgraph SS_Agent [2. Schema Selector Agent]
+    subgraph SS[2. Schema Selector]
         direction TB
-        SS_Filter[Filter Columns]
-        SS_Table[Select Tables]
-        SS_Col[Finalize Columns]
-        
-        SS_Filter --> SS_Table --> SS_Col
+        SS_T[Tools run in PARALLEL]
+        SS1[filter_column]
+        SS2[select_tables]
+        SS3[select_columns]
+        SS_T --> SS1
+        SS_T --> SS2
+        SS_T --> SS3
     end
 
-    SS_Agent -->|Reduced Schema| CG_Agent
-
-    subgraph CG_Agent [3. Candidate Generator Agent]
+    subgraph CG[3. Candidate Generator]
         direction TB
-        CG_Parallel[Parallel Generation]
-        
-        subgraph Strategies [Generation Strategies Parallel]
-            CG_Std[Standard]
-            CG_CoT[Chain-of-Thought]
-            CG_Decomp[Decomposition]
-        end
-        
-        CG_Revise[Revise & Fix]
-        
-        CG_Parallel --> CG_Std
-        CG_Parallel --> CG_CoT
-        CG_Parallel --> CG_Decomp
-        
-        CG_Std --> CG_Revise
-        CG_CoT --> CG_Revise
-        CG_Decomp --> CG_Revise
+        CG_T[3 Strategies in PARALLEL]
+        CG1[Standard]
+        CG2[Chain-of-Thought]
+        CG3[Decomposition]
+        CG4[revise errors]
+        CG_T --> CG1
+        CG_T --> CG2
+        CG_T --> CG3
+        CG1 --> CG4
+        CG2 --> CG4
+        CG3 --> CG4
     end
 
-    CG_Agent -->|SQL Candidates| UT_Agent
-
-    subgraph UT_Agent [4. Unit Tester Agent]
+    subgraph UT[4. Unit Tester]
         direction TB
-        UT_Gen[Generate Tests]
-        UT_Eval[Evaluate Candidates]
-        
-        UT_Gen -->|Unit Tests| UT_Eval
+        UT_T[Test Candidates in PARALLEL]
+        UT1[generate_unit_test]
+        UT2[evaluate]
+        UT_T --> UT1
+        UT1 --> UT2
     end
 
-    UT_Agent -->|Best Candidate| Exec[Execution Engine]
-    
-    Exec -.->|Run SQL| DB
-    DB -.->|Query Results| Exec
-    
-    Exec -->|SQL + Results| RE_Agent
-    
-    subgraph RE_Agent [5. Result Explainer Agent]
-        RE_Exp[Generate Explanation]
+    subgraph RE[5. Result Explainer]
+        RE1[explain_result]
     end
 
-    RE_Agent -->|Natural Language Answer| Output([Final Response])
+    IR --> SS
+    SS --> CG
+    CG --> UT
+    UT --> DB[(PostgreSQL)]
+    DB --> RE
+    RE --> Output([Answer])
 
-    %% Listeners/Classes
-    class IR_Agent,SS_Agent,CG_Agent,UT_Agent,RE_Agent agent;
-    class IR_KW,IR_Ent,IR_Ctx,SS_Filter,SS_Table,SS_Col,CG_Std,CG_CoT,CG_Decomp,CG_Revise,UT_Gen,UT_Eval,RE_Exp subagent;
-    class LSH,Vector,DB storage;
-    class Strategies parallel;
-    class Output output;
+    LSH[(LSH Index)] -.-> IR2
+    Vec[(Vector Store)] -.-> IR3
+
+    style IR fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style SS fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style CG fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style UT fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style RE fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+```
+
+### Parallel Execution Details
+
+```mermaid
+flowchart TB
+    subgraph Stage1[Stage 1: Information Retrieval]
+        direction LR
+        A1[extract_keywords] 
+        A2[retrieve_entity]
+        A3[retrieve_context]
+    end
+
+    subgraph Stage2[Stage 2: Schema Selection]
+        direction LR
+        B1[filter_column]
+        B2[select_tables]
+        B3[select_columns]
+    end
+
+    subgraph Stage3[Stage 3: SQL Generation - PARALLEL]
+        direction LR
+        C1[Standard SQL]
+        C2[CoT SQL]
+        C3[Decomp SQL]
+    end
+
+    subgraph Stage4[Stage 4: Unit Testing - PARALLEL]
+        direction LR
+        D1[Test Candidate 1]
+        D2[Test Candidate 2]
+        D3[Test Candidate 3]
+    end
+
+    Stage1 --> Stage2
+    Stage2 --> Stage3
+    Stage3 --> Stage4
+    Stage4 --> E[Best SQL Selected]
+
+    style Stage1 fill:#e3f2fd,stroke:#1565c0
+    style Stage2 fill:#f3e5f5,stroke:#7b1fa2
+    style Stage3 fill:#e8f5e9,stroke:#2e7d32
+    style Stage4 fill:#fff3e0,stroke:#ef6c00
 ```
 
 ### 1. Information Retriever Agent (IR)
