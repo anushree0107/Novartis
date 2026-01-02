@@ -30,9 +30,11 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
         score: response.score,
         grade: response.grade,
         breakdown: response.breakdown.map(m => ({
-          metric: m.metric,
-          value: m.value || m.contribution * 100,
-          status: m.status === 'good' || m.contribution > 0.8 ? 'good' : 'warning',
+          metric: (m.name || m.metric || 'Unknown').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          value: m.raw_value !== undefined
+            ? (m.raw_value < 1 ? m.raw_value * 100 : Math.min(m.raw_value, 100))
+            : (m.normalized_value !== undefined ? m.normalized_value * 100 : Math.min(m.contribution, 100)),
+          status: m.status?.toLowerCase() === 'good' ? 'good' : m.status?.toLowerCase() === 'critical' ? 'critical' : 'warning',
         })),
         issues: response.top_issues,
         recommendations: response.recommendations,

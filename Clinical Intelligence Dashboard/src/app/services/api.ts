@@ -31,10 +31,14 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 // ============ DQI API ============
 
 export interface DQIMetric {
-    metric: string;
-    value: number;
+    name: string;
+    metric?: string; // fallback
+    raw_value: number;
+    normalized_value: number;
+    weight: number;
     contribution: number;
     status: string;
+    value?: number;
 }
 
 export interface DQIResponse {
@@ -290,6 +294,174 @@ export async function generateWeeklyDigest(studyId?: string): Promise<string> {
 
 export async function getSiteReportJson(siteId: string): Promise<any> {
     return fetchApi<any>(`/api/reports/site/${siteId}/json`);
+}
+
+// ============ Risk/Anomaly Detection API ============
+
+export interface RiskColor {
+    bg: string;
+    text: string;
+    border: string;
+    gradient: string;
+    glow: string;
+    icon: string;
+    badge_class: string;
+}
+
+export interface FeatureContribution {
+    name: string;
+    raw_name: string;
+    contribution: number;
+    raw_value: number;
+    formatted_value: string;
+    severity: string;
+    color: string;
+    bar_width: number;
+}
+
+export interface RiskScore {
+    entity_id: string;
+    entity_type: string;
+    is_anomaly: boolean;
+    anomaly_score: number;
+    anomaly_score_pct: number;
+    risk_level: string;
+    risk_color: RiskColor;
+    method_scores: Record<string, number>;
+    feature_contributions: FeatureContribution[];
+    anomalous_features: string[];
+    explanation: string;
+    gauge_color: string;
+    rank: number;
+    score_label: string;
+}
+
+export interface ControlChart {
+    metric_name: string;
+    metric_display_name: string;
+    current_value: number;
+    formatted_value: string;
+    mean: number;
+    std: number;
+    ucl: number;
+    lcl: number;
+    is_out_of_control: boolean;
+    violation_type: string | null;
+    status_color: string;
+    status_icon: string;
+}
+
+export interface SiteRiskDetail {
+    site_id: string;
+    anomaly_score: number;
+    risk_level: string;
+    risk_color: RiskColor;
+    is_anomaly: boolean;
+    explanation: string;
+    method_scores_chart: any;
+    feature_contributions_chart: any;
+    control_charts: ControlChart[];
+    recommendations: string[];
+    similar_risk_sites: Array<{ site_id: string; risk_level: string; score: number }>;
+}
+
+export interface RiskDashboard {
+    summary: {
+        total_sites: number;
+        anomaly_count: number;
+        anomaly_rate: number;
+        anomaly_rate_formatted: string;
+        risk_distribution: Array<{ level: string; count: number; percentage: number; color: string; icon: string }>;
+        top_anomalous_features: Array<{ name: string; count: number; percentage: number }>;
+        top_anomalies: RiskScore[];
+    };
+    risk_matrix: any;
+    alert_count: { critical: number; high: number; warning: number; info: number };
+    recent_anomalies: RiskScore[];
+}
+
+export async function fetchRiskDashboard(): Promise<RiskDashboard> {
+    return fetchApi<RiskDashboard>('/api/risk/enhanced/dashboard');
+}
+
+export async function fetchSiteRisk(siteId: string): Promise<SiteRiskDetail> {
+    return fetchApi<SiteRiskDetail>(`/api/risk/enhanced/site/${siteId}`);
+}
+
+export async function fetchHighRiskSites(threshold: string = 'High'): Promise<RiskScore[]> {
+    return fetchApi<RiskScore[]>(`/api/risk/enhanced/high-risk?threshold=${threshold}`);
+}
+
+export async function fetchAllAnomalies(limit: number = 50): Promise<RiskScore[]> {
+    return fetchApi<RiskScore[]>(`/api/risk/enhanced/anomalies?limit=${limit}`);
+}
+
+// ============ Clustering API ============
+
+export interface ClusterColor {
+    primary: string;
+    secondary: string;
+    name: string;
+}
+
+export interface ClusterProfile {
+    cluster_id: number;
+    cluster_name: string;
+    size: number;
+    percentage: number;
+    risk_level: string;
+    risk_color: RiskColor;
+    cluster_color: ClusterColor;
+    description: string;
+    icon: string;
+    feature_means: Record<string, number>;
+    representative_sites: string[];
+    stats: Array<{ name: string; formatted: string; value: number }>;
+}
+
+export interface ClusteringResult {
+    method: string;
+    method_display_name: string;
+    n_clusters: number;
+    total_sites: number;
+    quality_score: number;
+    quality_label: string;
+    quality_color: string;
+    metrics: Record<string, { value: number; label: string }>;
+    profiles: ClusterProfile[];
+    distribution_chart: any;
+    risk_breakdown_chart: any;
+    feature_radar_chart: any;
+}
+
+export interface SiteCluster {
+    site_id: string;
+    cluster_id: number;
+    cluster_name: string;
+    cluster_color: ClusterColor;
+    risk_level: string;
+    risk_color: RiskColor;
+    method: string;
+    confidence: number | null;
+    cluster_probabilities: Array<{ cluster_id: number; cluster_name: string; probability: number; color: string }> | null;
+    similar_sites: string[];
+    cluster_stats: {
+        size: number;
+        description: string;
+        feature_means: Record<string, number>;
+    };
+}
+
+export async function fetchClusteringDashboard(): Promise<ClusteringResult> {
+    return fetchApi<ClusteringResult>('/api/analytics/clustering/advanced/dashboard');
+}
+
+export async function fetchSiteCluster(siteId: string, method: string = 'ensemble'): Promise<SiteCluster> {
+    return fetchApi<SiteCluster>(`/api/analytics/clustering/advanced/site/${siteId}?method=${method}`);
+}
+
+export async function fetchClusterComparison(): Promise<any> {
+    return fetchApi<any>('/api/analytics/clustering/advanced/compare');
 }
 
 // ============ Health Check ============

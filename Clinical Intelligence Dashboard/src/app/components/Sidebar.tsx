@@ -1,4 +1,4 @@
-import { ChartBar, TrendingUp, Bell, Zap, FileText, MessageCircle, MessagesSquare } from 'lucide-react';
+import { ChartBar, TrendingUp, Bell, Zap, FileText, MessageCircle, MessagesSquare, HeartPulse } from 'lucide-react';
 
 interface SidebarProps {
   activeSection: string;
@@ -7,6 +7,7 @@ interface SidebarProps {
 
 export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
   const navItems = [
+    { id: 'site-health', icon: '🏥', label: 'Site Health', IconComponent: HeartPulse },
     { id: 'dqi', icon: '📊', label: 'DQI Scores', IconComponent: ChartBar },
     { id: 'analytics', icon: '📈', label: 'Analytics', IconComponent: TrendingUp },
     { id: 'alerts', icon: '🔔', label: 'Alerts', IconComponent: Bell },
@@ -39,8 +40,8 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
               <button
                 onClick={() => onSectionChange(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeSection === item.id
-                    ? 'bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]'
-                    : 'text-blue-100 hover:bg-white/10'
+                  ? 'bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]'
+                  : 'text-blue-100 hover:bg-white/10'
                   }`}
               >
                 <span className="text-xl">{item.icon}</span>
