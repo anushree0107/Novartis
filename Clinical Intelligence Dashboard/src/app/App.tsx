@@ -7,6 +7,7 @@ import { Alerts } from './components/Alerts';
 import { Actions } from './components/Actions';
 import { Reports } from './components/Reports';
 import { Query } from './components/Query';
+import { Chat } from './components/Chat';
 import { AIModal } from './components/AIModal';
 
 export default function App() {
@@ -34,6 +35,8 @@ export default function App() {
         return <Reports />;
       case 'query':
         return <Query />;
+      case 'chat':
+        return <Chat />;
       default:
         return <DQIScores onAiClick={openAiModal} />;
     }
@@ -49,11 +52,11 @@ export default function App() {
     <div className="min-h-screen bg-[#e8eaf0] font-['Inter',sans-serif] relative overflow-hidden">
       {/* Background gradient overlay */}
       <div className="fixed inset-0 bg-gradient-radial from-[#d0d5e0] via-[#e8eaf0] to-[#e8eaf0] pointer-events-none" />
-      
+
       {/* Main container */}
       <div className="relative flex h-screen">
         <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-        
+
         <main className="flex-1 overflow-y-auto p-8">
           {renderSection()}
         </main>

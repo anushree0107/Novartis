@@ -9,12 +9,12 @@ load_dotenv()
 # Groq API Configuration
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
-# LLM Models - Using Groq's available models
+# LLM Models - Using Groq's currently available models
 MODELS = {
-    "schema_selector": "openai/gpt-oss-20b",  # For schema selection
-    "sql_generator": "openai/gpt-oss-120b",        # For SQL generation (GPT OSS 120B via Groq)
-    "sql_refiner": "openai/gpt-oss-20b",      # For SQL refinement
-    "evaluator": "openai/gpt-oss-120b"            # For quick evaluation (faster model)
+    "schema_selector": "llama-3.3-70b-versatile",   # For schema selection
+    "sql_generator": "llama-3.3-70b-versatile",     # For SQL generation
+    "sql_refiner": "llama-3.3-70b-versatile",       # For SQL refinement
+    "evaluator": "llama-3.1-8b-instant"             # For quick evaluation (faster model)
 }
 
 # Token limits for optimization

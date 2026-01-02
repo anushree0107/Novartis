@@ -1,4 +1,4 @@
-import { ChartBar, TrendingUp, Bell, Zap, FileText, MessageCircle } from 'lucide-react';
+import { ChartBar, TrendingUp, Bell, Zap, FileText, MessageCircle, MessagesSquare } from 'lucide-react';
 
 interface SidebarProps {
   activeSection: string;
@@ -13,6 +13,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
     { id: 'actions', icon: '⚡', label: 'Actions', IconComponent: Zap },
     { id: 'reports', icon: '📝', label: 'Reports', IconComponent: FileText },
     { id: 'query', icon: '💬', label: 'Query', IconComponent: MessageCircle },
+    { id: 'chat', icon: '🤖', label: 'AI Chat', IconComponent: MessagesSquare },
   ];
 
   return (
@@ -37,11 +38,10 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
             <li key={item.id}>
               <button
                 onClick={() => onSectionChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeSection === item.id
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeSection === item.id
                     ? 'bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]'
                     : 'text-blue-100 hover:bg-white/10'
-                }`}
+                  }`}
               >
                 <span className="text-xl">{item.icon}</span>
                 <span>{item.label}</span>

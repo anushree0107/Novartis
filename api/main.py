@@ -102,10 +102,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from api.routes import query, dqi, reports, actions, analytics, risk, clustering
+from api.routes import query, dqi, reports, actions, analytics, risk, clustering, nexus
 
 app.include_router(dqi.router, prefix="/api/dqi", tags=["DQI"])
 app.include_router(query.router, prefix="/api/query", tags=["Query"])
+app.include_router(nexus.router, prefix="/api/nexus", tags=["NEXUS Text-to-SQL"])
 app.include_router(risk.router, prefix="/api/risk", tags=["Risk"])
 app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
 app.include_router(actions.router, prefix="/api/actions", tags=["Actions"])

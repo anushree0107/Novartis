@@ -151,14 +151,85 @@ export interface QueryResponse {
 }
 
 export async function executeQuery(question: string): Promise<QueryResponse> {
-    return fetchApi<QueryResponse>('/api/query', {
+    return fetchApi<QueryResponse>('/api/query/query', {
         method: 'POST',
         body: JSON.stringify({ question, verbose: false }),
     });
 }
 
 export async function getQueryStatus(): Promise<{ status: string; graph_nodes: number }> {
-    return fetchApi('/api/status');
+    return fetchApi('/api/query/status');
+}
+
+// ============ NEXUS Text-to-SQL API (Fast Mode) ============
+
+export interface NexusQueryRequest {
+    question: string;
+    num_candidates?: number;
+    num_unit_tests?: number;
+    disable_unit_test?: boolean;
+    execute?: boolean;
+    explain?: boolean;
+}
+
+export interface NexusQueryResponse {
+    success: boolean;
+    question: string;
+    sql: string;
+    explanation?: string;
+    execution_result?: Record<string, any>;
+    metrics: {
+        total_time: number;
+        total_tokens?: number;
+        pipeline_time?: number;
+    };
+    error?: string;
+}
+
+export interface NexusBatchResponse {
+    results: NexusQueryResponse[];
+    total_time: number;
+    success_count: number;
+    failure_count: number;
+}
+
+export async function executeNexusQuery(
+    question: string,
+    options?: Partial<NexusQueryRequest>
+): Promise<NexusQueryResponse> {
+    return fetchApi<NexusQueryResponse>('/api/nexus/query', {
+        method: 'POST',
+        body: JSON.stringify({
+            question,
+            num_candidates: options?.num_candidates ?? 3,
+            num_unit_tests: options?.num_unit_tests ?? 5,
+            disable_unit_test: options?.disable_unit_test ?? false,
+            execute: options?.execute ?? true,
+            explain: options?.explain ?? true,
+        }),
+    });
+}
+
+export async function executeNexusBatch(
+    questions: string[],
+    options?: { execute?: boolean; explain?: boolean }
+): Promise<NexusBatchResponse> {
+    return fetchApi<NexusBatchResponse>('/api/nexus/query/batch', {
+        method: 'POST',
+        body: JSON.stringify({
+            questions,
+            execute: options?.execute ?? true,
+            explain: options?.explain ?? false,
+        }),
+    });
+}
+
+export async function getNexusHealth(): Promise<{ status: string; database_connected: boolean; pipeline_ready: boolean }> {
+    return fetchApi('/api/nexus/health');
+}
+
+export async function getNexusSchema(): Promise<{ tables: string[]; schema_details: Record<string, any> }> {
+    return fetchApi('/api/nexus/schema');
 }
 
 // ============ Actions API ============
