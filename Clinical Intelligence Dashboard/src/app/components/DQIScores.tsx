@@ -24,18 +24,39 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
     setError(null);
 
     try {
-      const response = await fetchDQIApi(entityType, entityId);
+      // Auto-format entity ID: if user enters just a number, prefix with entity type
+      let formattedId = entityId.trim();
+      const prefixMap = { site: 'Site', patient: 'Patient', study: 'Study' };
+      const prefix = prefixMap[entityType];
+
+      // If the ID is numeric or doesn't start with the prefix, add it
+      if (/^\d+$/.test(formattedId) || !formattedId.toLowerCase().startsWith(prefix.toLowerCase())) {
+        formattedId = `${prefix} ${formattedId.replace(/^(site|patient|study)\s*/i, '')}`;
+      }
+
+      const response = await fetchDQIApi(entityType, formattedId);
       // Transform API response to component format
+      // Format values to max 2 decimal places
+      const formatValue = (val: number) => Number(val.toFixed(2));
+
       setDqiData({
-        score: response.score,
+        score: formatValue(response.score),
         grade: response.grade,
-        breakdown: response.breakdown.map(m => ({
-          metric: (m.name || m.metric || 'Unknown').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-          value: m.raw_value !== undefined
-            ? (m.raw_value < 1 ? m.raw_value * 100 : Math.min(m.raw_value, 100))
-            : (m.normalized_value !== undefined ? m.normalized_value * 100 : Math.min(m.contribution, 100)),
-          status: m.status?.toLowerCase() === 'good' ? 'good' : m.status?.toLowerCase() === 'critical' ? 'critical' : 'warning',
-        })),
+        breakdown: response.breakdown.map(m => {
+          let value = 0;
+          if (m.raw_value !== undefined) {
+            value = m.raw_value <= 1 ? m.raw_value * 100 : Math.min(m.raw_value, 100);
+          } else if (m.normalized_value !== undefined) {
+            value = m.normalized_value * 100;
+          } else {
+            value = Math.min(m.contribution || 0, 100);
+          }
+          return {
+            metric: (m.name || m.metric || 'Unknown').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            value: formatValue(value),
+            status: m.status?.toLowerCase() === 'good' ? 'good' : m.status?.toLowerCase() === 'critical' ? 'critical' : 'warning',
+          };
+        }),
         issues: response.top_issues,
         recommendations: response.recommendations,
         explanation: response.explanation,
@@ -179,7 +200,7 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="text-4xl text-gray-800">{dqiData.score}</div>
+                    <div className="text-4xl text-gray-800">{dqiData.score.toFixed(2)}</div>
                     <div className="text-sm text-gray-500">/ 100</div>
                   </div>
                 </div>
@@ -210,7 +231,7 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
                 <div key={idx}>
                   <div className="flex justify-between mb-1 text-sm">
                     <span className="text-gray-700">{item.metric}</span>
-                    <span className="text-gray-800">{item.value}%</span>
+                    <span className="text-gray-800">{typeof item.value === 'number' ? item.value.toFixed(2) : item.value}%</span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div

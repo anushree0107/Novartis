@@ -40,11 +40,17 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
         setError(null);
 
         try {
+            // Auto-format site ID: if user enters just a number, prefix with "Site "
+            let formattedSiteId = siteId.trim();
+            if (/^\d+$/.test(formattedSiteId) || !formattedSiteId.toLowerCase().startsWith('site')) {
+                formattedSiteId = `Site ${formattedSiteId.replace(/^site\s*/i, '')}`;
+            }
+
             // Fetch all three data sources in parallel
             const [dqiRes, riskRes, clusterRes] = await Promise.allSettled([
-                fetchDQI('site', siteId),
-                fetchSiteRisk(siteId),
-                fetchSiteCluster(siteId)
+                fetchDQI('site', formattedSiteId),
+                fetchSiteRisk(formattedSiteId),
+                fetchSiteCluster(formattedSiteId)
             ]);
 
             setData({
@@ -252,8 +258,8 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                                 key={tab}
                                 onClick={() => setActiveTab(tab as any)}
                                 className={`px-6 py-3 font-medium transition-all ${activeTab === tab
-                                        ? 'text-[#EC6602] border-b-2 border-[#EC6602]'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                    ? 'text-[#EC6602] border-b-2 border-[#EC6602]'
+                                    : 'text-gray-500 hover:text-gray-700'
                                     }`}
                             >
                                 {tab === 'overview' && '📊 Overview'}
