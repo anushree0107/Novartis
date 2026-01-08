@@ -31,9 +31,19 @@ def get_orchestrator():
 @router.post("/query", response_model=QueryResponse)
 async def query(request: QueryRequest):
     """Execute a natural language query through SAGE-Flow."""
+    import asyncio
+    
     try:
         orchestrator = get_orchestrator()
-        result = orchestrator.query(request.question)
+        
+        # Run synchronous query in thread pool to avoid blocking
+        try:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(orchestrator.query, request.question),
+                timeout=60.0  # 60 second timeout
+            )
+        except asyncio.TimeoutError:
+            raise HTTPException(status_code=504, detail="Query timed out after 60 seconds")
         
         # Handle dictionary response from SAGEAgent
         if isinstance(result, dict):
@@ -55,7 +65,11 @@ async def query(request: QueryRequest):
                 thought_process=thought,
                 execution_order="graph_rag",
                 timing={
-                    "total": 0.0 # Timing not exposed in new agent
+                    "routing": 0.0,
+                    "sql": 0.0,
+                    "graph": 0.0,
+                    "merge": 0.0,
+                    "total": 0.0
                 },
                 success=not result.get("error", False)
             )
@@ -75,6 +89,8 @@ async def query(request: QueryRequest):
             },
             success=result.success
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -61,12 +61,36 @@ export function Chat() {
             let response: Message;
 
             if (mode === 'fast') {
-                // Fast Mode - NEXUS Text-to-SQL
+                // Fast Mode - Trials Text-to-SQL
                 const result: NexusQueryResponse = await executeNexusQuery(input);
+
+                // Format execution result as the main answer if available
+                let mainContent = '';
+                if (result.execution_result && result.execution_result.data && result.execution_result.data.length > 0) {
+                    const data = result.execution_result.data;
+                    const columns = result.execution_result.columns || Object.keys(data[0]);
+
+                    // Create markdown table
+                    let table = '| ' + columns.join(' | ') + ' |\n';
+                    table += '| ' + columns.map(() => '---').join(' | ') + ' |\n';
+                    data.slice(0, 20).forEach((row: any) => {
+                        const values = columns.map((col: string) => String(row[col] ?? ''));
+                        table += '| ' + values.join(' | ') + ' |\n';
+                    });
+                    if (data.length > 20) {
+                        table += `\n*Showing 20 of ${data.length} rows*`;
+                    }
+                    mainContent = `**Query Results (${data.length} rows):**\n\n${table}`;
+                } else if (result.explanation) {
+                    mainContent = result.explanation;
+                } else {
+                    mainContent = 'Query executed successfully. No results returned.';
+                }
+
                 response = {
                     id: (Date.now() + 1).toString(),
                     type: 'assistant',
-                    content: result.explanation || result.sql || 'Query executed successfully',
+                    content: mainContent,
                     mode: 'fast',
                     timestamp: new Date(),
                     metadata: {
@@ -78,7 +102,7 @@ export function Chat() {
                     },
                 };
             } else {
-                // Planning Mode - SAGE-Flow
+                // Planning Mode - SAGE-CODE
                 const result: QueryResponse = await executeQuery(input);
                 response = {
                     id: (Date.now() + 1).toString(),
@@ -162,12 +186,12 @@ export function Chat() {
                 {mode === 'planning' ? (
                     <div className="flex items-center gap-2">
                         <Brain className="w-4 h-4" />
-                        <span><strong>Planning Mode:</strong> Uses SAGE-Flow with graph reasoning for detailed analysis</span>
+                        <span><strong>Planning Mode:</strong> Uses SAGE-CODE with graph reasoning for detailed analysis</span>
                     </div>
                 ) : (
                     <div className="flex items-center gap-2">
                         <Zap className="w-4 h-4" />
-                        <span><strong>Fast Mode:</strong> NEXUS Text-to-SQL pipeline for quick SQL generation</span>
+                        <span><strong>Fast Mode:</strong> Trials Text-to-SQL pipeline for quick SQL generation</span>
                     </div>
                 )}
             </div>
@@ -284,7 +308,7 @@ export function Chat() {
                         <div className="bg-white border shadow-sm rounded-lg p-4 flex items-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
                             <span className="text-gray-600">
-                                {mode === 'planning' ? 'Analyzing with SAGE-Flow...' : 'Generating SQL...'}
+                                {mode === 'planning' ? 'Analyzing with SAGE-CODE...' : 'Generating SQL...'}
                             </span>
                         </div>
                     </div>

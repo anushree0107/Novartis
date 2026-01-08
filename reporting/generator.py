@@ -492,8 +492,15 @@ Key Findings: {', '.join(report.key_findings) if report.key_findings else 'None 
 Be concise and actionable."""
         
         try:
-            response = self.llm.invoke(prompt)
-            return response.content
+            # Use thread executor with timeout to prevent blocking async server
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(self.llm.invoke, prompt)
+                try:
+                    response = future.result(timeout=30)  # 30 second timeout
+                    return response.content
+                except concurrent.futures.TimeoutError:
+                    return f"This report summarizes the status of {report.entity_type} {report.entity_id}."
         except Exception:
             return f"This report summarizes the status of {report.entity_type} {report.entity_id}."
     

@@ -22,12 +22,12 @@ MEDAL_COLORS = {
 }
 
 METRIC_DISPLAY = {
-    "dqi_score": {"name": "Data Quality Index", "icon": "📊", "unit": "score", "higher_is_better": True},
-    "open_issues": {"name": "Open Issues", "icon": "🔴", "unit": "count", "higher_is_better": False},
-    "missing_visits_pct": {"name": "Missing Visits", "icon": "📅", "unit": "%", "higher_is_better": False},
-    "query_resolution_rate": {"name": "Query Resolution", "icon": "✅", "unit": "%", "higher_is_better": True},
-    "sdv_completion_pct": {"name": "SDV Completion", "icon": "📋", "unit": "%", "higher_is_better": True},
-    "enrollment_rate": {"name": "Enrollment Rate", "icon": "👥", "unit": "rate", "higher_is_better": True}
+    "dqi_score": {"name": "Data Quality Index", "icon": "📊", "unit": "score", "higher_is_better": "true"},
+    "open_issues": {"name": "Open Issues", "icon": "🔴", "unit": "count", "higher_is_better": "false"},
+    "missing_visits_pct": {"name": "Missing Visits", "icon": "📅", "unit": "%", "higher_is_better": "false"},
+    "query_resolution_rate": {"name": "Query Resolution", "icon": "✅", "unit": "%", "higher_is_better": "true"},
+    "sdv_completion_pct": {"name": "SDV Completion", "icon": "📋", "unit": "%", "higher_is_better": "true"},
+    "enrollment_rate": {"name": "Enrollment Rate", "icon": "👥", "unit": "rate", "higher_is_better": "true"}
 }
 
 

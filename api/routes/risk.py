@@ -137,7 +137,7 @@ class UISiteRiskDetail(BaseModel):
     feature_contributions_chart: Dict[str, Any]
     control_charts: List[UIControlChart]
     recommendations: List[str]
-    similar_risk_sites: List[Dict[str, str]]
+    similar_risk_sites: List[Dict[str, Any]]
 
 
 class UIDashboard(BaseModel):
@@ -474,74 +474,79 @@ async def get_enhanced_anomalies_ui(
 @router.get("/enhanced/site/{site_id}", response_model=UISiteRiskDetail)
 async def get_site_risk_detail_ui(site_id: str):
     """Get comprehensive UI-ready risk detail for a site."""
-    result = enhanced_detector.get_site_risk(site_id)
+    try:
+        result = enhanced_detector.get_site_risk(site_id)
+        
+        if not result:
+            raise HTTPException(status_code=404, detail=f"Site {site_id} not found in risk model")
+        
+        risk_color = RISK_COLORS.get(result.risk_level, RISK_COLORS["Low"])
+        
+        # Method scores chart (radar)
+        method_scores_chart = {
+            "type": "radar",
+            "labels": [m.replace("_", " ").title() for m in result.method_scores.keys()],
+            "data": [round(v * 100, 1) for v in result.method_scores.values()],
+            "color": risk_color["bg"]
+        }
+        
+        # Feature contributions chart (horizontal bar)
+        feature_contribs = []
+        for name, contrib in sorted(result.feature_contributions.items(), key=lambda x: x[1], reverse=True):
+            raw_val = result.features.get(name, 0)
+            feature_contribs.append(format_feature_contribution(name, contrib, raw_val))
+        
+        feature_contributions_chart = {
+            "type": "horizontal_bar",
+            "data": feature_contribs[:8]
+        }
+        
+        # Control charts
+        control_results = enhanced_detector.control_chart_analysis(site_id)
+        control_charts = [build_ui_control_chart(c) for c in control_results] if control_results else []
     
-    if not result:
-        raise HTTPException(status_code=404, detail=f"Site {site_id} not found")
-    
-    risk_color = RISK_COLORS.get(result.risk_level, RISK_COLORS["Low"])
-    
-    # Method scores chart (radar)
-    method_scores_chart = {
-        "type": "radar",
-        "labels": [m.replace("_", " ").title() for m in result.method_scores.keys()],
-        "data": [round(v * 100, 1) for v in result.method_scores.values()],
-        "color": risk_color["bg"]
-    }
-    
-    # Feature contributions chart (horizontal bar)
-    feature_contribs = []
-    for name, contrib in sorted(result.feature_contributions.items(), key=lambda x: x[1], reverse=True):
-        raw_val = result.features.get(name, 0)
-        feature_contribs.append(format_feature_contribution(name, contrib, raw_val))
-    
-    feature_contributions_chart = {
-        "type": "horizontal_bar",
-        "data": feature_contribs[:8]
-    }
-    
-    # Control charts
-    control_results = enhanced_detector.control_chart_analysis(site_id)
-    control_charts = [build_ui_control_chart(c) for c in control_results]
-    
-    # Recommendations based on anomalous features
-    recommendations = []
-    for feat in result.anomalous_features[:3]:
-        if "missing_visits" in feat:
-            recommendations.append("Schedule site visit to address missing visit data")
-        elif "missing_pages" in feat:
-            recommendations.append("Review CRF completion process with site staff")
-        elif "open_issues" in feat:
-            recommendations.append("Prioritize query resolution through targeted follow-up")
-        elif "safety" in feat:
-            recommendations.append("URGENT: Expedite pending safety reviews")
-        elif "days" in feat:
-            recommendations.append("Address aged data issues through site engagement")
-    
-    if not recommendations:
-        recommendations.append("Continue routine monitoring")
-    
-    # Similar risk sites
-    all_results = enhanced_detector.detect_anomalies()
-    similar = [
-        {"site_id": r.entity_id, "risk_level": r.risk_level, "score": round(r.anomaly_score, 3)}
-        for r in all_results 
-        if r.risk_level == result.risk_level and r.entity_id != site_id
-    ][:5]
-    
-    return UISiteRiskDetail(
-        site_id=site_id,
-        anomaly_score=round(result.anomaly_score, 4),
-        risk_level=result.risk_level,
-        risk_color=risk_color,
-        is_anomaly=result.is_anomaly,
-        explanation=result.explanation,
-        method_scores_chart=method_scores_chart,
-        feature_contributions_chart=feature_contributions_chart,
-        control_charts=control_charts,
-        recommendations=recommendations,
-        similar_risk_sites=similar
-    )
+        # Recommendations based on anomalous features
+        recommendations = []
+        for feat in result.anomalous_features[:3]:
+            if "missing_visits" in feat:
+                recommendations.append("Schedule site visit to address missing visit data")
+            elif "missing_pages" in feat:
+                recommendations.append("Review CRF completion process with site staff")
+            elif "open_issues" in feat:
+                recommendations.append("Prioritize query resolution through targeted follow-up")
+            elif "safety" in feat:
+                recommendations.append("URGENT: Expedite pending safety reviews")
+            elif "days" in feat:
+                recommendations.append("Address aged data issues through site engagement")
+        
+        if not recommendations:
+            recommendations.append("Continue routine monitoring")
+        
+        # Similar risk sites
+        all_results = enhanced_detector.detect_anomalies()
+        similar = [
+            {"site_id": r.entity_id, "risk_level": r.risk_level, "score": round(r.anomaly_score, 3)}
+            for r in all_results 
+            if r.risk_level == result.risk_level and r.entity_id != site_id
+        ][:5]
+        
+        return UISiteRiskDetail(
+            site_id=site_id,
+            anomaly_score=round(result.anomaly_score, 4),
+            risk_level=result.risk_level,
+            risk_color=risk_color,
+            is_anomaly=result.is_anomaly,
+            explanation=result.explanation,
+            method_scores_chart=method_scores_chart,
+            feature_contributions_chart=feature_contributions_chart,
+            control_charts=control_charts,
+            recommendations=recommendations,
+            similar_risk_sites=similar
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting risk for {site_id}: {str(e)}")
 
 
 @router.get("/enhanced/high-risk", response_model=List[UIAnomalyScore])

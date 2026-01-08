@@ -26,10 +26,23 @@ def get_report_generator():
 @router.get("/site/{site_id}", response_class=PlainTextResponse)
 async def generate_site_report(site_id: str):
     """Generate a comprehensive site summary report."""
+    import asyncio
+    
     try:
         generator = get_report_generator()
-        report = generator.generate_site_summary(site_id)
+        
+        # Run synchronous report generation in thread pool
+        try:
+            report = await asyncio.wait_for(
+                asyncio.to_thread(generator.generate_site_summary, site_id),
+                timeout=60.0  # 60 second timeout
+            )
+        except asyncio.TimeoutError:
+            raise HTTPException(status_code=504, detail="Report generation timed out after 60 seconds")
+        
         return report.to_markdown()
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LandingPage } from './components/LandingPage';
 import { Sidebar } from './components/Sidebar';
+import { ExecutiveDashboard } from './components/ExecutiveDashboard';
 import { SiteHealthDashboard } from './components/SiteHealthDashboard';
 import { DQIScores } from './components/DQIScores';
 import { Analytics } from './components/Analytics';
@@ -13,7 +14,7 @@ import { AIModal } from './components/AIModal';
 
 export default function App() {
   const [showDashboard, setShowDashboard] = useState(false);
-  const [activeSection, setActiveSection] = useState('site-health');
+  const [activeSection, setActiveSection] = useState('executive');
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [aiModalContent, setAiModalContent] = useState({ title: '', content: '' });
 
@@ -24,6 +25,8 @@ export default function App() {
 
   const renderSection = () => {
     switch (activeSection) {
+      case 'executive':
+        return <ExecutiveDashboard />;
       case 'site-health':
         return <SiteHealthDashboard onAiClick={openAiModal} />;
       case 'dqi':
@@ -41,7 +44,7 @@ export default function App() {
       case 'chat':
         return <Chat />;
       default:
-        return <SiteHealthDashboard onAiClick={openAiModal} />;
+        return <ExecutiveDashboard />;
     }
   };
 

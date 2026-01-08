@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, ChevronDown, Loader2 } from 'lucide-react';
 import { generateSiteReport, generateStudyReport, generateWeeklyDigest } from '../services/api';
+import ReactMarkdown from 'react-markdown';
 
 export function Reports() {
   const [reportType, setReportType] = useState('site');
@@ -171,37 +172,33 @@ High accuracy rate with minimal corrections required.
           </div>
 
           <div className="bg-white p-6 rounded-lg max-h-[600px] overflow-y-auto">
-            <div className="prose prose-gray max-w-none">
-              {report.split('\n').map((line, idx) => {
-                if (line.startsWith('# ')) {
-                  return <h1 key={idx} className="text-2xl text-gray-800 mb-4 mt-6">{line.slice(2)}</h1>;
-                }
-                if (line.startsWith('## ')) {
-                  return <h2 key={idx} className="text-xl text-gray-800 mb-3 mt-5 border-b border-[#3b82f6]/30 pb-2">{line.slice(3)}</h2>;
-                }
-                if (line.startsWith('### ')) {
-                  return <h3 key={idx} className="text-lg text-gray-700 mb-2 mt-4">{line.slice(4)}</h3>;
-                }
-                if (line.startsWith('**') && line.endsWith('**')) {
-                  return <p key={idx} className="text-gray-800 mb-2">{line.replace(/\*\*/g, '')}</p>;
-                }
-                if (line.startsWith('- ')) {
-                  return <li key={idx} className="text-gray-700 ml-4 mb-1">{line.slice(2)}</li>;
-                }
-                if (line.startsWith('```')) {
-                  return null;
-                }
-                if (line.includes('|') || line.includes('---')) {
-                  return <div key={idx} className="text-gray-700 text-sm font-mono">{line}</div>;
-                }
-                if (line.trim() === '---') {
-                  return <hr key={idx} className="border-[#3b82f6]/20 my-4" />;
-                }
-                if (line.trim()) {
-                  return <p key={idx} className="text-gray-700 mb-2">{line}</p>;
-                }
-                return <br key={idx} />;
-              })}
+            <div className="prose prose-gray max-w-none
+              [&_h1]:text-2xl [&_h1]:text-gray-800 [&_h1]:mb-4 [&_h1]:mt-6
+              [&_h2]:text-xl [&_h2]:text-gray-800 [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:border-b [&_h2]:border-[#3b82f6]/30 [&_h2]:pb-2
+              [&_h3]:text-lg [&_h3]:text-gray-700 [&_h3]:mb-2 [&_h3]:mt-4
+              [&_p]:text-gray-700 [&_p]:mb-2
+              [&_li]:text-gray-700 [&_li]:mb-1
+              [&_strong]:text-gray-800 [&_strong]:font-semibold
+              [&_hr]:border-[#3b82f6]/20 [&_hr]:my-4
+              [&_table]:w-full [&_table]:border-collapse [&_table]:my-4
+              [&_th]:bg-gray-100 [&_th]:text-gray-800 [&_th]:font-semibold [&_th]:px-4 [&_th]:py-2 [&_th]:border [&_th]:border-gray-300
+              [&_td]:px-4 [&_td]:py-2 [&_td]:border [&_td]:border-gray-300
+              [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm
+              [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto
+            ">
+              <ReactMarkdown>
+                {(() => {
+                  // Clean up AI thinking tags and other artifacts
+                  let cleanContent = report;
+                  // Remove <think>...</think> blocks (including multiline)
+                  cleanContent = cleanContent.replace(/<think>[\s\S]*?<\/think>/gi, '');
+                  // Remove any remaining <think> or </think> tags
+                  cleanContent = cleanContent.replace(/<\/?think>/gi, '');
+                  // Remove any Okay/Ok prefixes that are common in AI responses
+                  cleanContent = cleanContent.replace(/^(Okay,?\s*|Ok,?\s*)/gim, '');
+                  return cleanContent.trim();
+                })()}
+              </ReactMarkdown>
             </div>
           </div>
         </div>
