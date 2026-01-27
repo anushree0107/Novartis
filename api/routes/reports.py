@@ -35,10 +35,10 @@ async def generate_site_report(site_id: str):
         try:
             report = await asyncio.wait_for(
                 asyncio.to_thread(generator.generate_site_summary, site_id),
-                timeout=60.0  # 60 second timeout
+                timeout=300.0  # 5 minute timeout for report generation
             )
         except asyncio.TimeoutError:
-            raise HTTPException(status_code=504, detail="Report generation timed out after 60 seconds")
+            raise HTTPException(status_code=504, detail="Report generation timed out after 5 minutes")
         
         return report.to_markdown()
     except HTTPException:

@@ -40,10 +40,10 @@ async def query(request: QueryRequest):
         try:
             result = await asyncio.wait_for(
                 asyncio.to_thread(orchestrator.query, request.question),
-                timeout=60.0  # 60 second timeout
+                timeout=300.0  # 5 minute timeout for LLM queries
             )
         except asyncio.TimeoutError:
-            raise HTTPException(status_code=504, detail="Query timed out after 60 seconds")
+            raise HTTPException(status_code=504, detail="Query timed out after 5 minutes")
         
         # Handle dictionary response from SAGEAgent
         if isinstance(result, dict):
