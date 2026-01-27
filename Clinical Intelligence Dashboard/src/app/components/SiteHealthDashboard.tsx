@@ -91,17 +91,17 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                         Site Health Dashboard
                     </h1>
-                    <p className="text-gray-500 text-sm mt-1">
+                    <p className="text-gray-400 text-sm mt-1">
                         Unified view of Data Quality, Risk Assessment, and Site Clustering
                     </p>
                 </div>
             </div>
 
             {/* Search Controls */}
-            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <div className="bg-[#1a2332] rounded-2xl p-5 shadow-lg shadow-black/20 border border-white/10">
                 <div className="flex gap-4 items-center">
                     <div className="flex-1">
                         <input
@@ -110,7 +110,7 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                             value={siteId}
                             onChange={(e) => setSiteId(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && fetchAllData()}
-                            className="w-full bg-gray-50 text-gray-800 px-5 py-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:bg-white focus:outline-none placeholder-gray-400 text-lg font-medium transition-all"
+                            className="w-full bg-[#0f1419] text-white px-5 py-4 rounded-xl border-2 border-white/10 focus:border-blue-500 focus:bg-[#0a0f14] focus:outline-none placeholder-gray-500 text-lg font-medium transition-all"
                         />
                     </div>
                     <button
@@ -124,8 +124,8 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
             </div>
 
             {error && (
-                <div className="glass-card p-4 border-l-4 border-l-red-500 bg-red-50">
-                    <p className="text-red-700">{error}</p>
+                <div className="bg-red-900/30 p-4 rounded-xl border-l-4 border-l-red-500">
+                    <p className="text-red-300">{error}</p>
                 </div>
             )}
 
@@ -136,7 +136,7 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                     <div className="grid grid-cols-3 gap-5">
                         {/* DQI Score Card */}
                         <div
-                            className="relative overflow-hidden bg-white rounded-2xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 shadow-lg shadow-gray-200/50"
+                            className="relative overflow-hidden bg-[#1a2332] rounded-2xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 shadow-lg shadow-black/20 border border-white/10"
                             style={{ borderLeftColor: data.dqi ? getGradeColor(data.dqi.grade) : '#888' }}
                             onClick={() => setActiveTab('dqi')}
                         >
@@ -144,8 +144,8 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                             <div className="relative">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
-                                        <Target className="w-6 h-6 text-blue-600" />
-                                        <span className="text-gray-700 font-semibold text-lg">Data Quality</span>
+                                        <Target className="w-6 h-6 text-blue-400" />
+                                        <span className="text-gray-200 font-semibold text-lg">Data Quality</span>
                                     </div>
                                     {data.dqi && (
                                         <span
@@ -160,12 +160,12 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                                     <div className="text-6xl font-bold" style={{ color: data.dqi ? getGradeColor(data.dqi.grade) : '#888' }}>
                                         {data.dqi ? data.dqi.score.toFixed(1) : '--'}
                                     </div>
-                                    <div className="text-gray-400 text-lg mt-1">/ 100</div>
+                                    <div className="text-gray-500 text-lg mt-1">/ 100</div>
                                 </div>
                                 {data.dqi && (
                                     <div className="mt-2 text-center">
                                         <span
-                                            className={`text-sm px-4 py-1.5 rounded-full font-medium ${data.dqi.is_clean ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}
+                                            className={`text-sm px-4 py-1.5 rounded-full font-medium ${data.dqi.is_clean ? 'bg-green-900/50 text-green-300' : 'bg-amber-900/50 text-amber-300'}`}
                                         >
                                             {data.dqi.status}
                                         </span>
@@ -176,7 +176,7 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
 
                         {/* Risk Score Card */}
                         <div
-                            className="relative overflow-hidden bg-white rounded-2xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 shadow-lg shadow-gray-200/50"
+                            className="relative overflow-hidden bg-[#1a2332] rounded-2xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 shadow-lg shadow-black/20 border border-white/10"
                             style={{ borderLeftColor: data.risk ? getRiskColor(data.risk.risk_level) : '#888' }}
                             onClick={() => setActiveTab('risk')}
                         >
@@ -184,8 +184,8 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                             <div className="relative">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
-                                        <Shield className="w-6 h-6 text-orange-600" />
-                                        <span className="text-gray-700 font-semibold text-lg">Risk Assessment</span>
+                                        <Shield className="w-6 h-6 text-orange-400" />
+                                        <span className="text-gray-200 font-semibold text-lg">Risk Assessment</span>
                                     </div>
                                     {data.risk && (
                                         <span
@@ -200,12 +200,12 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                                     <div className="text-6xl font-bold" style={{ color: data.risk ? getRiskColor(data.risk.risk_level) : '#888' }}>
                                         {data.risk ? (data.risk.anomaly_score * 100).toFixed(0) : '--'}
                                     </div>
-                                    <div className="text-gray-400 text-lg mt-1">Anomaly Score</div>
+                                    <div className="text-gray-500 text-lg mt-1">Anomaly Score</div>
                                 </div>
                                 {data.risk && (
                                     <div className="mt-2 text-center">
                                         <span
-                                            className={`text-sm px-4 py-1.5 rounded-full font-medium ${data.risk.is_anomaly ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}
+                                            className={`text-sm px-4 py-1.5 rounded-full font-medium ${data.risk.is_anomaly ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300'}`}
                                         >
                                             {data.risk.is_anomaly ? '⚠️ Anomaly Detected' : '✅ Normal'}
                                         </span>
@@ -216,7 +216,7 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
 
                         {/* Cluster Card */}
                         <div
-                            className="relative overflow-hidden bg-white rounded-2xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 shadow-lg shadow-gray-200/50"
+                            className="relative overflow-hidden bg-[#1a2332] rounded-2xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 shadow-lg shadow-black/20 border border-white/10"
                             style={{ borderLeftColor: data.cluster?.cluster_color?.primary || '#8b5cf6' }}
                             onClick={() => setActiveTab('cluster')}
                         >
@@ -224,8 +224,8 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                             <div className="relative">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
-                                        <Users className="w-6 h-6 text-purple-600" />
-                                        <span className="text-gray-700 font-semibold text-lg">Site Segment</span>
+                                        <Users className="w-6 h-6 text-purple-400" />
+                                        <span className="text-gray-200 font-semibold text-lg">Site Segment</span>
                                     </div>
                                     {data.cluster && (
                                         <span
@@ -243,7 +243,7 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                                     >
                                         {data.cluster ? `#${data.cluster.cluster_id}` : '--'}
                                     </div>
-                                    <div className="text-gray-400 text-lg mt-1">Cluster Group</div>
+                                    <div className="text-gray-500 text-lg mt-1">Cluster Group</div>
                                 </div>
                                 {data.cluster && (
                                     <div className="mt-2 text-center">
@@ -263,14 +263,14 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                     </div>
 
                     {/* Tab Navigation */}
-                    <div className="flex gap-2 border-b border-gray-200">
+                    <div className="flex gap-2 border-b border-white/10">
                         {['overview', 'dqi', 'risk', 'cluster'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab as any)}
                                 className={`px-6 py-3 font-medium transition-all ${activeTab === tab
                                     ? 'text-[#EC6602] border-b-2 border-[#EC6602]'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    : 'text-gray-400 hover:text-gray-200'
                                     }`}
                             >
                                 {tab === 'overview' && '📊 Overview'}
@@ -287,24 +287,24 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
                         {activeTab === 'overview' && (
                             <>
                                 {/* Combined Recommendations */}
-                                <div className="bg-white rounded-2xl p-6 col-span-2 shadow-lg shadow-gray-200/50 border border-gray-100">
-                                    <h3 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
-                                        <TrendingUp className="w-6 h-6 text-green-600" />
+                                <div className="bg-[#1a2332] rounded-2xl p-6 col-span-2 shadow-lg shadow-black/20 border border-white/10">
+                                    <h3 className="text-xl font-bold text-white mb-5 flex items-center gap-2">
+                                        <TrendingUp className="w-6 h-6 text-green-500" />
                                         Actionable Recommendations
                                     </h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         {/* From DQI */}
                                         {data.dqi?.recommendations?.map((rec, idx) => (
-                                            <div key={`dqi-${idx}`} className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                                                <span className="text-blue-600 mt-0.5 text-lg">📋</span>
-                                                <span className="text-gray-700 text-base">{rec}</span>
+                                            <div key={`dqi-${idx}`} className="flex items-start gap-3 p-4 bg-blue-900/30 rounded-xl border border-blue-500/20">
+                                                <span className="text-blue-400 mt-0.5 text-lg">📋</span>
+                                                <span className="text-gray-300 text-base">{rec}</span>
                                             </div>
                                         ))}
                                         {/* From Risk */}
                                         {data.risk?.recommendations?.map((rec, idx) => (
-                                            <div key={`risk-${idx}`} className="flex items-start gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
-                                                <span className="text-orange-600 mt-0.5 text-lg">⚠️</span>
-                                                <span className="text-gray-700 text-base">{rec}</span>
+                                            <div key={`risk-${idx}`} className="flex items-start gap-3 p-4 bg-orange-900/30 rounded-xl border border-orange-500/20">
+                                                <span className="text-orange-400 mt-0.5 text-lg">⚠️</span>
+                                                <span className="text-gray-300 text-base">{rec}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -312,15 +312,15 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
 
                                 {/* Issues */}
                                 {data.dqi?.top_issues && data.dqi.top_issues.length > 0 && (
-                                    <div className="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-                                        <h3 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
-                                            <AlertTriangle className="w-6 h-6 text-red-600" />
+                                    <div className="bg-[#1a2332] rounded-2xl p-6 shadow-lg shadow-black/20 border border-white/10">
+                                        <h3 className="text-xl font-bold text-white mb-5 flex items-center gap-2">
+                                            <AlertTriangle className="w-6 h-6 text-red-500" />
                                             Top Issues
                                         </h3>
                                         <ul className="space-y-3">
                                             {data.dqi.top_issues.map((issue, idx) => (
-                                                <li key={idx} className="flex items-start gap-3 text-gray-700 text-base">
-                                                    <span className="text-red-500 mt-0.5 text-lg">•</span>
+                                                <li key={idx} className="flex items-start gap-3 text-gray-300 text-base">
+                                                    <span className="text-red-400 mt-0.5 text-lg">•</span>
                                                     <span>{issue}</span>
                                                 </li>
                                             ))}
@@ -330,9 +330,9 @@ export function SiteHealthDashboard({ onAiClick }: SiteHealthDashboardProps) {
 
                                 {/* Similar Sites */}
                                 {(data.cluster?.similar_sites?.length || data.risk?.similar_risk_sites?.length) ? (
-                                    <div className="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-                                        <h3 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
-                                            <Users className="w-6 h-6 text-purple-600" />
+                                    <div className="bg-[#1a2332] rounded-2xl p-6 shadow-lg shadow-black/20 border border-white/10">
+                                        <h3 className="text-xl font-bold text-white mb-5 flex items-center gap-2">
+                                            <Users className="w-6 h-6 text-purple-400" />
                                             Similar Sites
                                         </h3>
                                         <div className="flex flex-wrap gap-2">

@@ -96,16 +96,16 @@ export function Actions() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="bg-gradient-to-r from-[#3b82f6] to-[#2563eb] bg-clip-text text-transparent mb-2">
+        <h2 className="bg-gradient-to-r from-[#60a5fa] to-[#3b82f6] bg-clip-text text-transparent mb-2">
           Agentic Actions
         </h2>
-        <p className="text-gray-600 text-sm">
+        <p className="text-gray-300 text-sm">
           Execute complex operations using natural language commands
         </p>
       </div>
 
       {/* Input Area */}
-      <div className="glass-card p-6">
+      <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -116,7 +116,7 @@ Examples:
 • Calculate batch DQI scores for all sites with enrollment > 50
 • Export all critical alerts from the last week to CSV
 • Send summary notifications to all site coordinators"
-          className="w-full h-32 bg-white text-gray-800 px-4 py-3 rounded-lg border border-[#3b82f6]/30 focus:border-[#3b82f6] focus:outline-none placeholder-gray-500 resize-none"
+          className="w-full h-32 bg-[#0f1419] text-white px-4 py-3 rounded-lg border border-white/10 focus:border-[#3b82f6] focus:outline-none placeholder-gray-400 resize-none"
         />
 
         <div className="flex justify-between items-center mt-4">
@@ -125,7 +125,7 @@ Examples:
               <button
                 key={idx}
                 onClick={() => setInput(qa.action)}
-                className="px-3 py-1.5 bg-white border border-[#3b82f6]/30 rounded-full text-gray-800 text-sm hover:border-[#3b82f6] transition-all duration-200"
+                className="px-3 py-1.5 bg-[#0f1419] border border-white/10 rounded-full text-white text-sm hover:border-[#3b82f6] transition-all duration-200"
               >
                 {qa.icon} {qa.label}
               </button>
@@ -145,30 +145,30 @@ Examples:
       {/* Results */}
       <div className="grid grid-cols-2 gap-6">
         {/* Execution Result */}
-        <div className="glass-card p-6">
-          <h3 className="text-gray-700 mb-4">Execution Result</h3>
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6">
+          <h3 className="text-gray-200 mb-4">Execution Result</h3>
 
           {result ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 {getStatusIcon(result.status)}
-                <span className="text-gray-800 capitalize">{result.status}</span>
+                <span className="text-white capitalize">{result.status}</span>
               </div>
 
-              <p className="text-gray-700 text-sm">{result.message}</p>
+              <p className="text-gray-200 text-sm">{result.message}</p>
 
-              <div className="bg-gray-100 p-4 rounded-lg">
-                <pre className="text-xs text-gray-700 whitespace-pre-wrap">{result.output}</pre>
+              <div className="bg-[#0f1419] p-4 rounded-lg">
+                <pre className="text-xs text-gray-200 whitespace-pre-wrap">{result.output}</pre>
               </div>
 
               <div>
-                <h4 className="text-sm text-gray-600 mb-2">Execution Steps:</h4>
+                <h4 className="text-sm text-gray-300 mb-2">Execution Steps:</h4>
                 <div className="space-y-2">
                   {result.steps.map((step: any, idx: number) => (
                     <div key={idx} className="flex justify-between items-center text-sm">
-                      <span className="text-gray-700">{step.step}</span>
+                      <span className="text-gray-200">{step.step}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-500 text-xs">{step.duration}</span>
+                        <span className="text-gray-400 text-xs">{step.duration}</span>
                         <CheckCircle className="w-3 h-3 text-green-500" />
                       </div>
                     </div>
@@ -177,16 +177,16 @@ Examples:
               </div>
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-600">
+            <div className="text-center py-12 text-gray-300">
               <p>No execution result yet</p>
-              <p className="text-sm mt-2">Enter a command and click Execute</p>
+              <p className="text-sm mt-2 text-gray-400">Enter a command and click Execute</p>
             </div>
           )}
         </div>
 
         {/* Audit Log */}
-        <div className="glass-card p-6">
-          <h3 className="text-gray-700 mb-4">Audit Log</h3>
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6">
+          <h3 className="text-gray-200 mb-4">Audit Log</h3>
 
           <div className="space-y-3 max-h-[400px] overflow-y-auto">
             {auditLog.map((log, idx) => (
@@ -194,10 +194,10 @@ Examples:
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2 mb-1">
                     {getStatusIcon(log.status)}
-                    <span className="text-gray-800 text-sm">{log.action}</span>
+                    <span className="text-white text-sm">{log.action}</span>
                   </div>
                 </div>
-                <div className="text-xs text-gray-500">{log.timestamp}</div>
+                <div className="text-xs text-gray-400">{log.timestamp}</div>
               </div>
             ))}
           </div>

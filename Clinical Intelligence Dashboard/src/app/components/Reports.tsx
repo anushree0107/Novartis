@@ -118,21 +118,21 @@ High accuracy rate with minimal corrections required.
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="bg-gradient-to-r from-[#3b82f6] to-[#2563eb] bg-clip-text text-transparent mb-2">
+        <h2 className="bg-gradient-to-r from-[#60a5fa] to-[#3b82f6] bg-clip-text text-transparent mb-2">
           Reports
         </h2>
-        <p className="text-gray-600 text-sm">
+        <p className="text-gray-300 text-sm">
           Generate comprehensive performance and analysis reports
         </p>
       </div>
 
       {/* Controls */}
-      <div className="glass-card p-4 flex flex-wrap gap-4">
+      <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-4 flex flex-wrap gap-4">
         <div className="relative flex-1 min-w-[200px]">
           <select
             value={reportType}
             onChange={(e) => setReportType(e.target.value)}
-            className="w-full bg-white text-gray-800 px-4 py-2 pr-10 rounded-lg border border-[#3b82f6]/30 focus:border-[#3b82f6] focus:outline-none appearance-none"
+            className="w-full bg-[#0f1419] text-white px-4 py-2 pr-10 rounded-lg border border-white/10 focus:border-[#3b82f6] focus:outline-none appearance-none"
           >
             <option value="site">Site Report</option>
             <option value="study">Study Report</option>
@@ -146,7 +146,7 @@ High accuracy rate with minimal corrections required.
           placeholder="Entity ID (optional)"
           value={entityId}
           onChange={(e) => setEntityId(e.target.value)}
-          className="flex-1 min-w-[200px] bg-white text-gray-800 px-4 py-2 rounded-lg border border-[#3b82f6]/30 focus:border-[#3b82f6] focus:outline-none placeholder-gray-500"
+          className="flex-1 min-w-[200px] bg-[#0f1419] text-white px-4 py-2 rounded-lg border border-white/10 focus:border-[#3b82f6] focus:outline-none placeholder-gray-400"
         />
 
         <button
@@ -159,31 +159,31 @@ High accuracy rate with minimal corrections required.
 
       {/* Report Display */}
       {report && (
-        <div className="glass-card p-6">
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-gray-700">Report Preview</h3>
+            <h3 className="text-gray-200">Report Preview</h3>
             <button
               onClick={downloadReport}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-[#3b82f6]/40 rounded-lg text-gray-800 hover:border-[#3b82f6] transition-all duration-200"
+              className="flex items-center gap-2 px-4 py-2 bg-[#0f1419] border border-white/10 rounded-lg text-white hover:border-[#3b82f6] transition-all duration-200"
             >
               <Download className="w-4 h-4" />
               Download
             </button>
           </div>
 
-          <div className="bg-white p-6 rounded-lg max-h-[600px] overflow-y-auto">
-            <div className="prose prose-gray max-w-none
-              [&_h1]:text-2xl [&_h1]:text-gray-800 [&_h1]:mb-4 [&_h1]:mt-6
-              [&_h2]:text-xl [&_h2]:text-gray-800 [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:border-b [&_h2]:border-[#3b82f6]/30 [&_h2]:pb-2
-              [&_h3]:text-lg [&_h3]:text-gray-700 [&_h3]:mb-2 [&_h3]:mt-4
-              [&_p]:text-gray-700 [&_p]:mb-2
-              [&_li]:text-gray-700 [&_li]:mb-1
-              [&_strong]:text-gray-800 [&_strong]:font-semibold
-              [&_hr]:border-[#3b82f6]/20 [&_hr]:my-4
+          <div className="bg-[#0f1419] p-6 rounded-lg max-h-[600px] overflow-y-auto">
+            <div className="prose prose-invert max-w-none
+              [&_h1]:text-2xl [&_h1]:text-white [&_h1]:mb-4 [&_h1]:mt-6
+              [&_h2]:text-xl [&_h2]:text-white [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:border-b [&_h2]:border-white/10 [&_h2]:pb-2
+              [&_h3]:text-lg [&_h3]:text-gray-200 [&_h3]:mb-2 [&_h3]:mt-4
+              [&_p]:text-gray-200 [&_p]:mb-2
+              [&_li]:text-gray-200 [&_li]:mb-1
+              [&_strong]:text-white [&_strong]:font-semibold
+              [&_hr]:border-white/10 [&_hr]:my-4
               [&_table]:w-full [&_table]:border-collapse [&_table]:my-4
-              [&_th]:bg-gray-100 [&_th]:text-gray-800 [&_th]:font-semibold [&_th]:px-4 [&_th]:py-2 [&_th]:border [&_th]:border-gray-300
-              [&_td]:px-4 [&_td]:py-2 [&_td]:border [&_td]:border-gray-300
-              [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm
+              [&_th]:bg-gray-800 [&_th]:text-white [&_th]:font-semibold [&_th]:px-4 [&_th]:py-2 [&_th]:border [&_th]:border-white/10
+              [&_td]:px-4 [&_td]:py-2 [&_td]:border [&_td]:border-white/10
+              [&_code]:bg-gray-800 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm
               [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto
             ">
               <ReactMarkdown>
@@ -205,8 +205,8 @@ High accuracy rate with minimal corrections required.
       )}
 
       {!report && (
-        <div className="glass-card p-12 text-center">
-          <p className="text-gray-600">Select report type and click "Generate Report"</p>
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-12 text-center">
+          <p className="text-gray-300">Select report type and click "Generate Report"</p>
         </div>
       )}
     </div>

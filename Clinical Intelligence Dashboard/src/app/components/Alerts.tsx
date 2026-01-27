@@ -139,43 +139,43 @@ export function Alerts({ onAiClick }: AlertsProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="bg-gradient-to-r from-[#3b82f6] to-[#2563eb] bg-clip-text text-transparent mb-2">
+        <h2 className="bg-gradient-to-r from-[#60a5fa] to-[#3b82f6] bg-clip-text text-transparent mb-2">
           Alerts & Notifications
         </h2>
-        <p className="text-gray-600 text-sm">
+        <p className="text-gray-300 text-sm">
           Monitor critical issues and system notifications
         </p>
       </div>
 
       {/* Summary Bar */}
       <div className="grid grid-cols-5 gap-4">
-        <div className="glass-card p-4 text-center">
-          <div className="text-2xl text-gray-800 mb-1">{severityCounts.total}</div>
-          <div className="text-xs text-gray-500">Total Alerts</div>
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-4 text-center">
+          <div className="text-2xl text-white mb-1">{severityCounts.total}</div>
+          <div className="text-xs text-gray-400">Total Alerts</div>
         </div>
-        <div className="glass-card p-4 text-center border-l-4 border-l-[#E03C31]">
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-4 text-center border-l-4 border-l-[#E03C31]">
           <div className="text-2xl text-[#E03C31] mb-1">{severityCounts.critical}</div>
-          <div className="text-xs text-gray-500">Critical</div>
+          <div className="text-xs text-gray-400">Critical</div>
         </div>
-        <div className="glass-card p-4 text-center border-l-4 border-l-[#f97316]">
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-4 text-center border-l-4 border-l-[#f97316]">
           <div className="text-2xl text-[#f97316] mb-1">{severityCounts.high}</div>
-          <div className="text-xs text-gray-500">High</div>
+          <div className="text-xs text-gray-400">High</div>
         </div>
-        <div className="glass-card p-4 text-center border-l-4 border-l-[#f59e0b]">
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-4 text-center border-l-4 border-l-[#f59e0b]">
           <div className="text-2xl text-[#f59e0b] mb-1">{severityCounts.medium}</div>
-          <div className="text-xs text-gray-500">Medium</div>
+          <div className="text-xs text-gray-400">Medium</div>
         </div>
-        <div className="glass-card p-4 text-center border-l-4 border-l-[#10b981]">
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-4 text-center border-l-4 border-l-[#10b981]">
           <div className="text-2xl text-[#10b981] mb-1">{severityCounts.low}</div>
-          <div className="text-xs text-gray-500">Low</div>
+          <div className="text-xs text-gray-400">Low</div>
         </div>
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-2 gap-6">
-        <div className="glass-card p-6">
-          <h3 className="text-gray-700 mb-2">Severity Distribution</h3>
-          <p className="text-xs text-gray-500 mb-4">Click on any segment for AI analysis</p>
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6">
+          <h3 className="text-gray-200 mb-2">Severity Distribution</h3>
+          <p className="text-xs text-gray-400 mb-4">Click on any segment for AI analysis</p>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -218,9 +218,9 @@ export function Alerts({ onAiClick }: AlertsProps) {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-6">
-          <h3 className="text-gray-700 mb-2">Category Distribution</h3>
-          <p className="text-xs text-gray-500 mb-4">Click on any segment for AI analysis</p>
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6">
+          <h3 className="text-gray-200 mb-2">Category Distribution</h3>
+          <p className="text-xs text-gray-400 mb-4">Click on any segment for AI analysis</p>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -269,11 +269,11 @@ export function Alerts({ onAiClick }: AlertsProps) {
         {alerts.map((alert) => (
           <div
             key={alert.id}
-            className="glass-card p-4 border-l-4 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-200"
+            className="bg-[#1a2332] rounded-2xl border border-white/10 p-4 border-l-4 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-200"
             style={{ borderLeftColor: getSeverityColor(alert.severity) }}
           >
             <div className="flex justify-between items-start mb-2">
-              <h4 className="text-gray-800">{alert.title}</h4>
+              <h4 className="text-white">{alert.title}</h4>
               <span
                 className="px-2 py-1 rounded text-xs text-white uppercase"
                 style={{ backgroundColor: getSeverityColor(alert.severity) }}
@@ -282,9 +282,9 @@ export function Alerts({ onAiClick }: AlertsProps) {
               </span>
             </div>
 
-            <p className="text-gray-600 text-sm mb-3">{alert.description}</p>
+            <p className="text-gray-300 text-sm mb-3">{alert.description}</p>
 
-            <div className="flex justify-between items-center text-xs text-gray-500">
+            <div className="flex justify-between items-center text-xs text-gray-400">
               <span>{alert.entity_id}</span>
               <span>{alert.entity_type}</span>
             </div>
@@ -294,7 +294,7 @@ export function Alerts({ onAiClick }: AlertsProps) {
                 `Alert Analysis: ${alert.title}`,
                 `Detailed analysis of ${alert.title}:\n\n**Alert Summary:**\n${alert.description}\n\n**Severity:** ${alert.severity.toUpperCase()}\n**Entity:** ${alert.entity_id}\n**Category:** ${alert.category}\n\n**Root Cause Analysis:**\nThis alert was triggered due to automated quality checks detecting an anomaly in the data submission pattern. The system identified that the issue requires immediate attention based on protocol requirements and data integrity rules.\n\n**Recommended Actions:**\n${alert.recommended_action || '1. Review the source documentation for the affected entity\n2. Contact the site coordinator to verify data accuracy\n3. Update or correct the data entry within 24 hours\n4. Document resolution steps in the query management system'}\n\n**Impact Assessment:**\n- Data Quality Index may be affected\n- Protocol compliance timeline at risk\n- Immediate action recommended to prevent escalation\n\n${alert.llm_analysis || '**Historical Context:**\nSimilar issues have been resolved with an average resolution time of 2.3 days. Best practice is to address within 24 hours to maintain optimal site performance.'}`
               )}
-              className="mt-3 w-full px-3 py-2 bg-white border border-[#3b82f6]/40 rounded-lg text-gray-800 text-sm hover:border-[#3b82f6] transition-all duration-200 hover:shadow-[0_0_12px_rgba(59,130,246,0.3)]"
+              className="mt-3 w-full px-3 py-2 bg-[#0f1419] border border-white/10 rounded-lg text-white text-sm hover:border-[#3b82f6] transition-all duration-200 hover:shadow-[0_0_12px_rgba(59,130,246,0.3)]"
             >
               🤖 AI Analysis
             </button>

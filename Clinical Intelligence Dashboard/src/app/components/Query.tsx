@@ -74,21 +74,21 @@ The overall trend shows a 5.2% improvement compared to the previous quarter, ind
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="bg-gradient-to-r from-[#3b82f6] to-[#2563eb] bg-clip-text text-transparent mb-2">
+        <h2 className="bg-gradient-to-r from-[#60a5fa] to-[#3b82f6] bg-clip-text text-transparent mb-2">
           Natural Language Query
         </h2>
-        <p className="text-gray-600 text-sm">
+        <p className="text-gray-300 text-sm">
           Ask questions about your data in plain English
         </p>
       </div>
 
       {/* Query Input */}
-      <div className="glass-card p-6">
+      <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6">
         <textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask a question about your clinical data..."
-          className="w-full h-24 bg-white text-gray-800 px-4 py-3 rounded-lg border border-[#3b82f6]/30 focus:border-[#3b82f6] focus:outline-none placeholder-gray-500 resize-none mb-4"
+          className="w-full h-24 bg-[#0f1419] text-white px-4 py-3 rounded-lg border border-white/10 focus:border-[#3b82f6] focus:outline-none placeholder-gray-400 resize-none mb-4"
         />
 
         <div className="flex justify-between items-center">
@@ -97,7 +97,7 @@ The overall trend shows a 5.2% improvement compared to the previous quarter, ind
               <button
                 key={idx}
                 onClick={() => setQuery(eq)}
-                className="px-3 py-1.5 bg-white border border-[#3b82f6]/30 rounded-full text-gray-800 text-xs hover:border-[#3b82f6] transition-all duration-200"
+                className="px-3 py-1.5 bg-[#0f1419] border border-white/10 rounded-full text-white text-xs hover:border-[#3b82f6] transition-all duration-200"
               >
                 {eq}
               </button>
@@ -118,23 +118,23 @@ The overall trend shows a 5.2% improvement compared to the previous quarter, ind
       {result && (
         <div className="space-y-6">
           {/* Answer Card */}
-          <div className="glass-card p-6">
+          <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="px-3 py-1 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white text-xs rounded-full">
                 {result.intent}
               </span>
             </div>
 
-            <div className="prose prose-gray max-w-none">
+            <div className="prose prose-invert max-w-none">
               {result.answer.split('\n').map((line: string, idx: number) => {
                 if (line.startsWith('**') && line.endsWith('**')) {
-                  return <h3 key={idx} className="text-gray-800 mt-4 mb-2">{line.replace(/\*\*/g, '')}</h3>;
+                  return <h3 key={idx} className="text-white mt-4 mb-2">{line.replace(/\*\*/g, '')}</h3>;
                 }
                 if (line.startsWith('- ')) {
-                  return <li key={idx} className="text-gray-700 ml-4 mb-1">{line.slice(2)}</li>;
+                  return <li key={idx} className="text-gray-200 ml-4 mb-1">{line.slice(2)}</li>;
                 }
                 if (line.trim()) {
-                  return <p key={idx} className="text-gray-700 mb-2">{line}</p>;
+                  return <p key={idx} className="text-gray-200 mb-2">{line}</p>;
                 }
                 return <br key={idx} />;
               })}
@@ -142,8 +142,8 @@ The overall trend shows a 5.2% improvement compared to the previous quarter, ind
           </div>
 
           {/* Timing Chart */}
-          <div className="glass-card p-6">
-            <h3 className="text-gray-700 mb-4">Query Execution Breakdown</h3>
+          <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-6">
+            <h3 className="text-gray-200 mb-4">Query Execution Breakdown</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={result.timing}>
                 <XAxis dataKey="phase" stroke="#6b7280" />
@@ -160,9 +160,9 @@ The overall trend shows a 5.2% improvement compared to the previous quarter, ind
             </ResponsiveContainer>
 
             <div className="mt-4 text-center">
-              <span className="text-gray-600 text-sm">
+              <span className="text-gray-300 text-sm">
                 Total execution time:{' '}
-                <span className="text-gray-800">
+                <span className="text-white">
                   {result.timing.reduce((acc: number, t: any) => acc + t.time, 0).toFixed(1)}s
                 </span>
               </span>
@@ -172,8 +172,8 @@ The overall trend shows a 5.2% improvement compared to the previous quarter, ind
       )}
 
       {!result && (
-        <div className="glass-card p-12 text-center">
-          <p className="text-gray-600">Enter a question and click "Query" to get insights</p>
+        <div className="bg-[#1a2332] rounded-2xl border border-white/10 p-12 text-center">
+          <p className="text-gray-300">Enter a question and click "Query" to get insights</p>
         </div>
       )}
     </div>

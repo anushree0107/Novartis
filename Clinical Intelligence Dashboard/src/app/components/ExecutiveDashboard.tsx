@@ -72,8 +72,8 @@ const issuesData = [
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-xl border border-gray-100">
-                <p className="font-semibold text-gray-800 text-sm">{label || payload[0].name}</p>
+            <div className="bg-[#1a2332]/95 backdrop-blur-sm p-3 rounded-xl shadow-xl border border-white/10">
+                <p className="font-semibold text-white text-sm">{label || payload[0].name}</p>
                 {payload.map((entry: any, index: number) => (
                     <p key={index} className="text-sm" style={{ color: entry.color }}>
                         {entry.name || entry.dataKey}: <span className="font-bold">{entry.value}</span>
@@ -105,11 +105,11 @@ export function ExecutiveDashboard() {
             <div className="flex items-center justify-center h-[80vh]">
                 <div className="text-center">
                     <div className="relative w-20 h-20 mx-auto mb-6">
-                        <div className="absolute inset-0 rounded-full border-4 border-blue-200"></div>
-                        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
-                        <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-blue-600" />
+                        <div className="absolute inset-0 rounded-full border-4 border-blue-900"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-400 animate-spin"></div>
+                        <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-blue-400" />
                     </div>
-                    <p className="text-gray-600 text-lg font-medium">Loading Dashboard...</p>
+                    <p className="text-gray-300 text-lg font-medium">Loading Dashboard...</p>
                 </div>
             </div>
         );
@@ -122,10 +122,10 @@ export function ExecutiveDashboard() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                         Executive Dashboard
                     </h1>
-                    <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
+                    <p className="text-gray-400 text-sm mt-1 flex items-center gap-2">
                         <Clock className="w-4 h-4" />
                         Real-time Portfolio Overview
                     </p>
@@ -198,8 +198,8 @@ export function ExecutiveDashboard() {
             {/* Main Charts Row */}
             <div className="grid grid-cols-3 gap-4">
                 {/* DQI Distribution - Larger Pie */}
-                <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 border border-gray-100">
-                    <h3 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <div className="bg-[#1a2332] rounded-2xl p-5 shadow-lg shadow-black/20 border border-white/10">
+                    <h3 className="text-base font-semibold text-white mb-2 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                         DQI Grade Distribution
                     </h3>
@@ -216,7 +216,7 @@ export function ExecutiveDashboard() {
                                     dataKey="value"
                                 >
                                     {dqiData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} stroke="white" strokeWidth={2} />
+                                        <Cell key={`cell-${index}`} fill={entry.color} stroke="#1a2332" strokeWidth={2} />
                                     ))}
                                 </Pie>
                                 <Tooltip content={<CustomTooltip />} />
@@ -227,15 +227,15 @@ export function ExecutiveDashboard() {
                         {dqiData.map((item) => (
                             <div key={item.name} className="flex items-center gap-1.5 text-xs">
                                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                                <span className="text-gray-600">{item.name.split(' ')[1]}: {item.value}</span>
+                                <span className="text-gray-400">{item.name.split(' ')[1]}: {item.value}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Risk Distribution */}
-                <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 border border-gray-100">
-                    <h3 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <div className="bg-[#1a2332] rounded-2xl p-5 shadow-lg shadow-black/20 border border-white/10">
+                    <h3 className="text-base font-semibold text-white mb-2 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-orange-500"></div>
                         Risk Distribution
                     </h3>
@@ -252,7 +252,7 @@ export function ExecutiveDashboard() {
                                     dataKey="value"
                                 >
                                     {riskData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} stroke="white" strokeWidth={2} />
+                                        <Cell key={`cell-${index}`} fill={entry.color} stroke="#1a2332" strokeWidth={2} />
                                     ))}
                                 </Pie>
                                 <Tooltip content={<CustomTooltip />} />
@@ -263,23 +263,23 @@ export function ExecutiveDashboard() {
                         {riskData.map((item) => (
                             <div key={item.name} className="flex items-center gap-1.5 text-xs">
                                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                                <span className="text-gray-600">{item.name}: {item.value}</span>
+                                <span className="text-gray-400">{item.name}: {item.value}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Quality Radar */}
-                <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 border border-gray-100">
-                    <h3 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                <div className="bg-[#1a2332] rounded-2xl p-5 shadow-lg shadow-black/20 border border-white/10">
+                    <h3 className="text-base font-semibold text-white mb-2 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                         Quality Metrics
                     </h3>
                     <div className="h-[200px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                                <PolarGrid stroke="#e5e7eb" />
-                                <PolarAngleAxis dataKey="metric" tick={{ fill: '#6b7280', fontSize: 10 }} />
+                                <PolarGrid stroke="#374151" />
+                                <PolarAngleAxis dataKey="metric" tick={{ fill: '#9ca3af', fontSize: 10 }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                                 <Radar name="Score" dataKey="value" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} strokeWidth={2} />
                                 <Tooltip content={<CustomTooltip />} />
@@ -290,8 +290,8 @@ export function ExecutiveDashboard() {
             </div>
 
             {/* Performance Trends - Full Width */}
-            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 border border-gray-100">
-                <h3 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <div className="bg-[#1a2332] rounded-2xl p-5 shadow-lg shadow-black/20 border border-white/10">
+                <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-green-500" />
                     Performance Trends (6 Months)
                 </h3>
@@ -308,11 +308,11 @@ export function ExecutiveDashboard() {
                                     <stop offset="100%" stopColor="#10b981" stopOpacity={0.05} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                             <XAxis dataKey="month" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} domain={[60, 100]} />
                             <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ paddingTop: 10 }} />
+                            <Legend wrapperStyle={{ paddingTop: 10, color: '#9ca3af' }} />
                             <Area type="monotone" dataKey="dqi" name="DQI Score" stroke="#3b82f6" fill="url(#dqiGradient)" strokeWidth={3} dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }} />
                             <Area type="monotone" dataKey="enrollment" name="Enrollment Rate" stroke="#10b981" fill="url(#enrollGradient)" strokeWidth={3} dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }} />
                             <Line type="monotone" dataKey="queries" name="Query Resolution" stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b', r: 3 }} strokeDasharray="5 5" />
@@ -324,17 +324,17 @@ export function ExecutiveDashboard() {
             {/* Site Rankings Row */}
             <div className="grid grid-cols-2 gap-4">
                 {/* Top Sites */}
-                <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 border border-gray-100">
-                    <h3 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <div className="bg-[#1a2332] rounded-2xl p-5 shadow-lg shadow-black/20 border border-white/10">
+                    <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                         <Award className="w-5 h-5 text-green-500" />
                         Top Performing Sites
                     </h3>
                     <div className="h-[180px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={topSites} layout="vertical" margin={{ left: 10, right: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={true} vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={true} vertical={false} />
                                 <XAxis type="number" domain={[0, 100]} stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis dataKey="site" type="category" width={80} stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} style={{ whiteSpace: 'nowrap' }} />
+                                <YAxis dataKey="site" type="category" width={80} stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} style={{ whiteSpace: 'nowrap' }} />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={20}>
                                     {topSites.map((_, index) => (
@@ -353,17 +353,17 @@ export function ExecutiveDashboard() {
                 </div>
 
                 {/* Bottom Sites */}
-                <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 border border-gray-100">
-                    <h3 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <div className="bg-[#1a2332] rounded-2xl p-5 shadow-lg shadow-black/20 border border-white/10">
+                    <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-red-500" />
                         Sites Requiring Attention
                     </h3>
                     <div className="h-[180px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={bottomSites} layout="vertical" margin={{ left: 10, right: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={true} vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={true} vertical={false} />
                                 <XAxis type="number" domain={[0, 100]} stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis dataKey="site" type="category" width={80} stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} style={{ whiteSpace: 'nowrap' }} />
+                                <YAxis dataKey="site" type="category" width={80} stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} style={{ whiteSpace: 'nowrap' }} />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={20}>
                                     {bottomSites.map((_, index) => (
@@ -383,15 +383,15 @@ export function ExecutiveDashboard() {
             </div>
 
             {/* Issues by Category */}
-            <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 border border-gray-100">
-                <h3 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <div className="bg-[#1a2332] rounded-2xl p-5 shadow-lg shadow-black/20 border border-white/10">
+                <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-amber-500" />
                     Issues by Category
                 </h3>
                 <div className="h-[160px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={issuesData} margin={{ left: 0, right: 0, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                             <XAxis dataKey="category" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} />
                             <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
                             <Tooltip content={<CustomTooltip />} />
@@ -407,25 +407,25 @@ export function ExecutiveDashboard() {
 
             {/* Stats Footer */}
             <div className="grid grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border border-green-100 text-center">
-                    <div className="text-3xl font-bold text-green-600">{dqiData[0].value + dqiData[1].value}</div>
-                    <div className="text-sm text-green-700 font-medium mt-1">High Quality Sites</div>
-                    <div className="text-xs text-green-600 mt-0.5">Grade A & B</div>
+                <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 rounded-2xl p-5 border border-green-500/20 text-center">
+                    <div className="text-3xl font-bold text-green-400">{dqiData[0].value + dqiData[1].value}</div>
+                    <div className="text-sm text-green-300 font-medium mt-1">High Quality Sites</div>
+                    <div className="text-xs text-green-400/70 mt-0.5">Grade A & B</div>
                 </div>
-                <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-5 border border-red-100 text-center">
-                    <div className="text-3xl font-bold text-red-600">{riskData[2].value + riskData[3].value}</div>
-                    <div className="text-sm text-red-700 font-medium mt-1">At Risk Sites</div>
-                    <div className="text-xs text-red-600 mt-0.5">High & Critical</div>
+                <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-5 border border-red-500/20 text-center">
+                    <div className="text-3xl font-bold text-red-400">{riskData[2].value + riskData[3].value}</div>
+                    <div className="text-sm text-red-300 font-medium mt-1">At Risk Sites</div>
+                    <div className="text-xs text-red-400/70 mt-0.5">High & Critical</div>
                 </div>
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100 text-center">
-                    <div className="text-3xl font-bold text-blue-600">92%</div>
-                    <div className="text-sm text-blue-700 font-medium mt-1">Query Resolution</div>
-                    <div className="text-xs text-blue-600 mt-0.5">Above Target</div>
+                <div className="bg-gradient-to-br from-blue-900/50 to-indigo-900/50 rounded-2xl p-5 border border-blue-500/20 text-center">
+                    <div className="text-3xl font-bold text-blue-400">92%</div>
+                    <div className="text-sm text-blue-300 font-medium mt-1">Query Resolution</div>
+                    <div className="text-xs text-blue-400/70 mt-0.5">Above Target</div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-5 border border-purple-100 text-center">
-                    <div className="text-3xl font-bold text-purple-600">88%</div>
-                    <div className="text-sm text-purple-700 font-medium mt-1">Protocol Adherence</div>
-                    <div className="text-xs text-purple-600 mt-0.5">Excellent</div>
+                <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-5 border border-purple-500/20 text-center">
+                    <div className="text-3xl font-bold text-purple-400">88%</div>
+                    <div className="text-sm text-purple-300 font-medium mt-1">Protocol Adherence</div>
+                    <div className="text-xs text-purple-400/70 mt-0.5">Excellent</div>
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-import { ChartBar, TrendingUp, Bell, Zap, FileText, MessageCircle, MessagesSquare, HeartPulse, LayoutDashboard } from 'lucide-react';
+import { ChartBar, TrendingUp, Bell, Zap, FileText, MessageCircle, MessagesSquare, HeartPulse, LayoutDashboard, Dna } from 'lucide-react';
 
 interface SidebarProps {
   activeSection: string;
@@ -11,6 +11,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
     { id: 'site-health', icon: '🏥', label: 'Site Health', IconComponent: HeartPulse },
     { id: 'dqi', icon: '�', label: 'DQI Scores', IconComponent: ChartBar },
     { id: 'analytics', icon: '📈', label: 'Analytics', IconComponent: TrendingUp },
+    { id: 'simulator', icon: '🧬', label: 'Digital Twin', IconComponent: Dna },
     { id: 'alerts', icon: '🔔', label: 'Alerts', IconComponent: Bell },
     { id: 'actions', icon: '⚡', label: 'Actions', IconComponent: Zap },
     { id: 'reports', icon: '📝', label: 'Reports', IconComponent: FileText },

@@ -4,28 +4,51 @@
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
 
-// Generic fetch wrapper with error handling
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            ...options?.headers,
-        },
-        ...options,
-    });
+// Default timeout for API calls (5 minutes for LLM queries)
+const DEFAULT_TIMEOUT = 300000; // 5 minutes in ms
 
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: response.statusText }));
-        throw new Error(error.detail || `API error: ${response.status}`);
+// Generic fetch wrapper with error handling and timeout
+async function fetchApi<T>(
+    endpoint: string, 
+    options?: RequestInit & { timeout?: number }
+): Promise<T> {
+    const { timeout = DEFAULT_TIMEOUT, ...fetchOptions } = options || {};
+    
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...fetchOptions?.headers,
+            },
+            signal: controller.signal,
+            ...fetchOptions,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ detail: response.statusText }));
+            throw new Error(error.detail || `API error: ${response.status}`);
+        }
+
+        // Handle text responses (for reports)
+        const contentType = response.headers.get('content-type');
+        if (contentType?.includes('text/plain')) {
+            return (await response.text()) as unknown as T;
+        }
+
+        return response.json();
+    } catch (error: any) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('Request timed out. The query is taking longer than expected. Please try again.');
+        }
+        throw error;
     }
-
-    // Handle text responses (for reports)
-    const contentType = response.headers.get('content-type');
-    if (contentType?.includes('text/plain')) {
-        return (await response.text()) as unknown as T;
-    }
-
-    return response.json();
 }
 
 // ============ DQI API ============

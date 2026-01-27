@@ -5,6 +5,7 @@ import { ExecutiveDashboard } from './components/ExecutiveDashboard';
 import { SiteHealthDashboard } from './components/SiteHealthDashboard';
 import { DQIScores } from './components/DQIScores';
 import { Analytics } from './components/Analytics';
+import { DigitalTwinSimulator } from './components/DigitalTwinSimulator';
 import { Alerts } from './components/Alerts';
 import { Actions } from './components/Actions';
 import { Reports } from './components/Reports';
@@ -33,6 +34,8 @@ export default function App() {
         return <DQIScores onAiClick={openAiModal} />;
       case 'analytics':
         return <Analytics onAiClick={openAiModal} />;
+      case 'simulator':
+        return <DigitalTwinSimulator />;
       case 'alerts':
         return <Alerts onAiClick={openAiModal} />;
       case 'actions':
@@ -55,9 +58,11 @@ export default function App() {
 
   // Show dashboard
   return (
-    <div className="min-h-screen bg-[#e8eaf0] font-['Inter',sans-serif] relative overflow-hidden">
+    <div className="min-h-screen bg-[#0f1419] font-['Inter',sans-serif] relative overflow-hidden">
       {/* Background gradient overlay */}
-      <div className="fixed inset-0 bg-gradient-radial from-[#d0d5e0] via-[#e8eaf0] to-[#e8eaf0] pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-b from-[#0f1419] via-[#0a0f14] to-[#0f1419] pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-blue-900/20 via-purple-900/10 to-transparent" />
+      </div>
 
       {/* Main container */}
       <div className="relative flex h-screen">

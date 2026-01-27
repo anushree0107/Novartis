@@ -123,18 +123,18 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
         <h2 className="bg-gradient-to-r from-[#3b82f6] to-[#2563eb] bg-clip-text text-transparent mb-2">
           Data Quality Index
         </h2>
-        <p className="text-gray-600 text-sm">
+        <p className="text-gray-400 text-sm">
           Monitor and analyze data quality metrics across entities
         </p>
       </div>
 
       {/* Controls */}
-      <div className="glass-card p-4 flex flex-wrap gap-4">
+      <div className="bg-[#1a2332] rounded-2xl p-4 flex flex-wrap gap-4 border border-white/10">
         <div className="relative flex-1 min-w-[200px]">
           <select
             value={entityType}
             onChange={(e) => setEntityType(e.target.value as 'site' | 'patient' | 'study')}
-            className="w-full bg-white text-gray-800 px-4 py-2 pr-10 rounded-lg border border-[#3b82f6]/30 focus:border-[#3b82f6] focus:outline-none appearance-none"
+            className="w-full bg-[#0f1419] text-white px-4 py-2 pr-10 rounded-lg border border-white/10 focus:border-[#3b82f6] focus:outline-none appearance-none"
           >
             <option value="site">Site</option>
             <option value="patient">Patient</option>
@@ -148,7 +148,7 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
           placeholder="Entity ID"
           value={entityId}
           onChange={(e) => setEntityId(e.target.value)}
-          className="flex-1 min-w-[200px] bg-white text-gray-800 px-4 py-2 rounded-lg border border-[#3b82f6]/30 focus:border-[#3b82f6] focus:outline-none placeholder-gray-500"
+          className="flex-1 min-w-[200px] bg-[#0f1419] text-white px-4 py-2 rounded-lg border border-white/10 focus:border-[#3b82f6] focus:outline-none placeholder-gray-500"
         />
 
         <button
@@ -163,8 +163,8 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
       {dqiData && (
         <div className="grid grid-cols-2 gap-6">
           {/* Score Card */}
-          <div className="glass-card p-6">
-            <h3 className="text-gray-700 mb-6">Overall Score</h3>
+          <div className="bg-[#1a2332] rounded-2xl p-6 border border-white/10">
+            <h3 className="text-gray-200 mb-6">Overall Score</h3>
             <div className="flex flex-col items-center">
               <div className="relative w-48 h-48 cursor-pointer" onClick={() => onAiClick(
                 'DQI Score Details',
@@ -200,8 +200,8 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="text-4xl text-gray-800">{dqiData.score.toFixed(2)}</div>
-                    <div className="text-sm text-gray-500">/ 100</div>
+                    <div className="text-4xl text-white">{dqiData.score.toFixed(2)}</div>
+                    <div className="text-sm text-gray-400">/ 100</div>
                   </div>
                 </div>
               </div>
@@ -215,7 +215,7 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
                 </div>
                 <button
                   onClick={() => onAiClick('DQI Score Analysis', 'Based on the current DQI score of 87.5, the data quality is good overall. The site demonstrates strong performance in completeness (92%) and accuracy (95%). However, there are opportunities for improvement in timeliness (78%), which is impacting the overall score.\n\nKey insights:\n- The site is performing above the 75th percentile for accuracy\n- Timeliness issues are primarily related to query response times\n- Recent trend shows improvement over the past 30 days\n\nRecommendations:\n- Focus on query resolution workflow optimization\n- Implement automated reminders for pending queries\n- Consider additional training for staff on data entry timelines')}
-                  className="px-4 py-2 bg-white border border-[#3b82f6]/40 rounded-lg text-gray-800 hover:border-[#3b82f6] transition-all duration-200 hover:shadow-[0_0_12px_rgba(37,99,235,0.3)] animate-pulse"
+                  className="px-4 py-2 bg-[#0f1419] border border-[#3b82f6]/40 rounded-lg text-white hover:border-[#3b82f6] transition-all duration-200 hover:shadow-[0_0_12px_rgba(37,99,235,0.3)] animate-pulse"
                 >
                   🤖 AI
                 </button>
@@ -224,16 +224,16 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
           </div>
 
           {/* Breakdown Card */}
-          <div className="glass-card p-6">
-            <h3 className="text-gray-700 mb-6">Metric Breakdown</h3>
+          <div className="bg-[#1a2332] rounded-2xl p-6 border border-white/10">
+            <h3 className="text-gray-200 mb-6">Metric Breakdown</h3>
             <div className="space-y-4">
               {dqiData.breakdown.map((item: any, idx: number) => (
                 <div key={idx}>
                   <div className="flex justify-between mb-1 text-sm">
-                    <span className="text-gray-700">{item.metric}</span>
-                    <span className="text-gray-800">{typeof item.value === 'number' ? item.value.toFixed(2) : item.value}%</span>
+                    <span className="text-gray-300">{item.metric}</span>
+                    <span className="text-white">{typeof item.value === 'number' ? item.value.toFixed(2) : item.value}%</span>
                   </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{
@@ -248,11 +248,11 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
           </div>
 
           {/* Issues Card */}
-          <div className="glass-card p-6 border-l-4 border-l-[#E03C31]">
-            <h3 className="text-gray-700 mb-4">Key Issues</h3>
+          <div className="bg-[#1a2332] rounded-2xl p-6 border border-white/10 border-l-4 border-l-[#E03C31]">
+            <h3 className="text-gray-200 mb-4">Key Issues</h3>
             <ul className="space-y-2">
               {dqiData.issues.map((issue: string, idx: number) => (
-                <li key={idx} className="flex items-start gap-2 text-gray-700 text-sm">
+                <li key={idx} className="flex items-start gap-2 text-gray-300 text-sm">
                   <span className="text-[#E03C31] mt-1">•</span>
                   <span>{issue}</span>
                 </li>
@@ -261,11 +261,11 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
           </div>
 
           {/* Recommendations Card */}
-          <div className="glass-card p-6 border-l-4 border-l-[#10b981]">
-            <h3 className="text-gray-700 mb-4">Recommendations</h3>
+          <div className="bg-[#1a2332] rounded-2xl p-6 border border-white/10 border-l-4 border-l-[#10b981]">
+            <h3 className="text-gray-200 mb-4">Recommendations</h3>
             <ul className="space-y-2">
               {dqiData.recommendations.map((rec: string, idx: number) => (
-                <li key={idx} className="flex items-start gap-2 text-gray-700 text-sm">
+                <li key={idx} className="flex items-start gap-2 text-gray-300 text-sm">
                   <span className="text-[#10b981] mt-1">✓</span>
                   <span>{rec}</span>
                 </li>
@@ -276,8 +276,8 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
       )}
 
       {!dqiData && (
-        <div className="glass-card p-12 text-center">
-          <p className="text-gray-600">Enter an entity ID and click "Fetch DQI" to view scores</p>
+        <div className="bg-[#1a2332] rounded-2xl p-12 text-center border border-white/10">
+          <p className="text-gray-400">Enter an entity ID and click "Fetch DQI" to view scores</p>
         </div>
       )}
     </div>
