@@ -34,3 +34,7 @@ uvicorn>=0.25.0
 
 # For testing
 pytest>=7.4.0
+
+groq 
+joblib 
+scikit-learn 

@@ -6,9 +6,7 @@ import pandas as pd
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langchain_groq import ChatGroq
 from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import create_react_agent
 from dotenv import load_dotenv
-from agents.tools_factory import DebateTools
 
 load_dotenv()
 
@@ -22,6 +20,7 @@ class DebateState(TypedDict):
     current_speaker: str
     round_count: int
     verdict: str
+    site_data: str  # Pre-fetched data for the site
 
 class DebateCouncil:
     def __init__(self, processing_dir="processed_data", graph_path="graph_rag/clinical_trial_graph.graphml"):
@@ -33,20 +32,21 @@ class DebateCouncil:
         self.graph = self._load_graph()
         self.data = self._load_csv_data()
         
-        # Initialize Tools
-        self.tool_factory = DebateTools(self.graph, self.data)
-        self.tools = self.tool_factory.get_tools()
-        
-        # Build Agents
-        self.hawk_agent = self._build_hawk_agent()
-        self.dove_agent = self._build_dove_agent()
-        
         self.workflow = self._build_workflow()
 
     def _load_graph(self):
         try:
-            if os.path.exists(self.graph_path):
-                return nx.read_graphml(self.graph_path)
+            # Resolve path relative to project root (parent of agents/)
+            if not os.path.isabs(self.graph_path):
+                project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                full_path = os.path.join(project_root, self.graph_path)
+            else:
+                full_path = self.graph_path
+                
+            if os.path.exists(full_path):
+                print(f"Loading graph from {full_path}...")
+                return nx.read_graphml(full_path)
+            print(f"Graph file not found at {full_path}, using empty graph")
             return nx.DiGraph()
         except Exception as e:
             print(f"Error loading graph: {e}")
@@ -55,89 +55,125 @@ class DebateCouncil:
     def _load_csv_data(self):
         data = {}
         try:
-            missing_pages_path = os.path.join(self.processing_dir, "missing_pages_processed.csv")
+            # Resolve path relative to project root
+            if not os.path.isabs(self.processing_dir):
+                project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                processing_dir = os.path.join(project_root, self.processing_dir)
+            else:
+                processing_dir = self.processing_dir
+                
+            missing_pages_path = os.path.join(processing_dir, "missing_pages_processed.csv")
             if os.path.exists(missing_pages_path):
                 data["missing_pages"] = pd.read_csv(missing_pages_path)
             
-            visit_proj_path = os.path.join(self.processing_dir, "visit_projection_processed.csv")
+            visit_proj_path = os.path.join(processing_dir, "visit_projection_processed.csv")
             if os.path.exists(visit_proj_path):
                 data["visit_projection"] = pd.read_csv(visit_proj_path)
         except Exception as e:
             print(f"Error loading CSV data: {e}")
         return data
 
-    def _build_hawk_agent(self):
-        # We will inject the prompt at runtime
-        return create_react_agent(self.llm, self.tools)
-
-    def _build_dove_agent(self):
-        # We will inject the prompt at runtime
-        return create_react_agent(self.llm, self.tools)
+    def _get_site_data(self, site_id: str) -> str:
+        """Pre-fetch all relevant data for a site"""
+        results = []
+        
+        # Query missing pages
+        if "missing_pages" in self.data:
+            df = self.data["missing_pages"]
+            site_data = df[df['sitenumber'] == site_id]
+            if not site_data.empty:
+                total_missing = site_data['no___days_page_missing'].sum()
+                avg_missing = site_data['no___days_page_missing'].mean()
+                results.append(f"Missing Pages: {len(site_data)} records, Total Missing Days: {total_missing:.0f}, Avg: {avg_missing:.2f} days")
+            else:
+                results.append(f"Missing Pages: No records found for {site_id}")
+        
+        # Query visit projection
+        if "visit_projection" in self.data:
+            df = self.data["visit_projection"]
+            site_data = df[df['site'] == site_id]
+            if not site_data.empty:
+                total_outstanding = site_data['__days_outstanding'].sum()
+                results.append(f"Visit Projection: {len(site_data)} visits, Total Days Outstanding: {total_outstanding:.0f}")
+            else:
+                results.append(f"Visit Projection: No records found for {site_id}")
+        
+        # Query graph neighbors
+        if self.graph.number_of_nodes() > 0:
+            target_node = None
+            possible_keys = [site_id, f"Site:{site_id}", site_id.replace("Site ", "Site:")]
+            for k in possible_keys:
+                if self.graph.has_node(k):
+                    target_node = k
+                    break
+            
+            if target_node:
+                neighbors = list(self.graph.neighbors(target_node))[:20]  # Limit to 20
+                results.append(f"Graph Connections: {len(neighbors)} linked entities including: {neighbors[:10]}")
+            else:
+                results.append(f"Graph Connections: Node '{site_id}' not found in graph")
+        else:
+            results.append("Graph Connections: Graph not loaded")
+        
+        return "\n".join(results)
 
     # --- WORKFLOW NODES ---
 
     async def hawk_node(self, state: DebateState):
-        """Invoke Hawk Agent with current conversation"""
-        prompt = f"""
-        You are THE HAWK 🦅. You are a paranoid, data-driven Clinical Safety Officer.
+        """Invoke Hawk with pre-fetched data"""
+        site_data = state.get("site_data", "No data available")
         
-        GOAL: Prove that {state['site_id']} is RISKY, FAILING, or DANGEROUS.
+        prompt = f"""You are THE HAWK 🦅. You are a paranoid, data-driven Clinical Safety Officer.
+
+GOAL: Prove that {state['site_id']} is RISKY, FAILING, or DANGEROUS.
+
+SITE DATA:
+{site_data}
+
+INSTRUCTIONS:
+1. Use the data above to find evidence of problems (missing pages, days outstanding).
+2. Construct a sharp, aggressive argument (max 100 words) citing specific numbers from the data.
+3. Be dramatic but factual - use the actual numbers provided.
+"""
         
-        INSTRUCTIONS:
-        1. Use your tools (`query_site_data`, `query_graph_neighbors`) to gather concrete evidence (missing pages, days outstanding).
-        2. Construct a sharp, aggressive argument (max 75 words) citing these specific numbers.
-        3. Do not make up data. If you don't have it, fetch it.
-        """
-        
-        # Inject context and system prompt
         input_messages = list(state["messages"])
         if not input_messages:
-             input_messages = [HumanMessage(content=f"Investigate {state['site_id']}")]
+            input_messages = [HumanMessage(content=f"Investigate {state['site_id']}")]
              
-        # Prepend System Prompt
         context_messages = [SystemMessage(content=prompt)] + input_messages
         
-        result = await self.hawk_agent.ainvoke({"messages": context_messages})
-        
-        # Find the last message that is from AI and has content
-        last_message_content = "I have no further arguments."
-        for msg in reversed(result["messages"]):
-            if isinstance(msg, AIMessage) and msg.content and str(msg.content).strip():
-                last_message_content = msg.content
-                break
+        response = await self.llm.ainvoke(context_messages)
         
         return {
-            "messages": [AIMessage(content=last_message_content, name="Hawk")],
+            "messages": [AIMessage(content=response.content, name="Hawk")],
             "current_speaker": "Dove",
             "round_count": state.get("round_count", 0) + 1
         }
 
     async def dove_node(self, state: DebateState):
-        """Invoke Dove Agent"""
-        prompt = f"""
-        You are THE DOVE 🕊️. You are an optimistic, big-picture Clinical Growth Lead.
+        """Invoke Dove with pre-fetched data"""
+        site_data = state.get("site_data", "No data available")
         
-        GOAL: Defend {state['site_id']} against the Hawk's attacks.
-        
-        INSTRUCTIONS:
-        1. Use your tools to find mitigating factors (e.g. connections to major studies, huge patient volume vs small errors).
-        2. Construct a polite, persuasive defense (max 75 words).
-        3. Use data to support your optimism.
-        """
+        prompt = f"""You are THE DOVE 🕊️. You are an optimistic, big-picture Clinical Growth Lead.
+
+GOAL: Defend {state['site_id']} against the Hawk's attacks.
+
+SITE DATA:
+{site_data}
+
+INSTRUCTIONS:
+1. Use the data above to find mitigating factors (connections to studies, context for the numbers).
+2. Construct a polite, persuasive counter-argument (max 100 words).
+3. Acknowledge issues but provide perspective - put the numbers in context.
+"""
         
         input_messages = list(state["messages"])
         context_messages = [SystemMessage(content=prompt)] + input_messages
         
-        result = await self.dove_agent.ainvoke({"messages": context_messages})
-        
-        last_message_content = "I rest my case."
-        for msg in reversed(result["messages"]):
-            if isinstance(msg, AIMessage) and msg.content and str(msg.content).strip():
-                last_message_content = msg.content
-                break
+        response = await self.llm.ainvoke(context_messages)
         
         return {
-            "messages": [AIMessage(content=last_message_content, name="Dove")],
+            "messages": [AIMessage(content=response.content, name="Dove")],
             "current_speaker": "Owl",
             "round_count": state.get("round_count", 0)
         }
@@ -146,15 +182,22 @@ class DebateCouncil:
         """The Owl: Judge"""
         if state["round_count"] < 3:
             return {"current_speaker": "Hawk"}
-            
-        prompt = f"""
-        You are THE OWL 🦉. Chief Medical Judge.
-        Review the debate:
-        {state['messages']}
         
-        Verdict: [Keep/Watch/Close]
-        Reasoning: Summarize the evidence found (or lack thereof).
-        """
+        site_data = state.get("site_data", "No data available")
+            
+        prompt = f"""You are THE OWL 🦉. Chief Medical Judge.
+
+SITE DATA:
+{site_data}
+
+Review the debate above and provide:
+
+**Verdict**: [KEEP / WATCH / CLOSE]
+
+**Reasoning**: Summarize the key evidence from both sides (2-3 sentences).
+
+**Recommendation**: One specific action item.
+"""
         response = self.llm.invoke([SystemMessage(content=prompt)] + state["messages"])
         return {
             "messages": [AIMessage(content=response.content, name="Owl")],
@@ -185,12 +228,17 @@ class DebateCouncil:
 
     async def run_debate(self, site_id: str):
         """Run the debate and yield messages"""
+        # Pre-fetch all data for this site
+        site_data = self._get_site_data(site_id)
+        print(f"\n📊 Pre-fetched data for {site_id}:\n{site_data}\n")
+        
         initial_state = {
             "site_id": site_id,
-            "messages": [HumanMessage(content=f"Analyze performance and risk for {site_id}. Use your tools to find data!")],
+            "messages": [HumanMessage(content=f"Analyze performance and risk for {site_id}.")],
             "current_speaker": "Hawk",
             "round_count": 0,
-            "verdict": ""
+            "verdict": "",
+            "site_data": site_data
         }
         
         async for event in self.workflow.astream(initial_state):

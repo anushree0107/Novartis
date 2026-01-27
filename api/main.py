@@ -102,7 +102,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from api.routes import query, dqi, reports, actions, analytics, risk, clustering, nexus, simulator
+from api.routes import query, dqi, reports, actions, analytics, risk, clustering, nexus, simulator, debate
 
 app.include_router(dqi.router, prefix="/api/dqi", tags=["DQI"])
 app.include_router(query.router, prefix="/api/query", tags=["Query"])
@@ -113,6 +113,7 @@ app.include_router(actions.router, prefix="/api/actions", tags=["Actions"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(clustering.router, prefix="/api/analytics/clustering", tags=["Clustering"])
 app.include_router(simulator.router, prefix="/api/simulator", tags=["Digital Twin Simulator"])
+app.include_router(debate.router, prefix="/api/debate", tags=["Debate Council"])
 
 
 @app.get("/")
@@ -128,7 +129,8 @@ async def root():
             "reports": "/api/reports",
             "actions": "/api/actions",
             "analytics": "/api/analytics",
-            "simulator": "/api/simulator"
+            "simulator": "/api/simulator",
+            "debate": "/api/debate/ws/debate/{site_id}"
         }
     }
 
