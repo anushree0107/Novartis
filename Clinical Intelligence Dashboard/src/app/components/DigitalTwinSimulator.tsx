@@ -53,17 +53,36 @@ export const DigitalTwinSimulator: React.FC = () => {
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [actionTypes, setActionTypes] = useState<ActionType[]>([]);
   const [presets, setPresets] = useState<PresetScenario[]>([]);
   const [regions, setRegions] = useState<string[]>([]);
   const [sites, setSites] = useState<string[]>([]);
-  
+
   const [newAction, setNewAction] = useState({
     action_type: 'add_cra',
     target: '',
     value: 2
   });
+
+  // Default fallback data
+  const defaultActionTypes: ActionType[] = [
+    { type: 'add_cra', name: 'Add CRA', description: 'Add CRAs to a region', value_description: 'Number of CRAs' },
+    { type: 'remove_cra', name: 'Remove CRA', description: 'Remove CRAs from a region', value_description: 'Number of CRAs' },
+    { type: 'increase_monitoring', name: 'Increase Monitoring', description: 'Increase monitoring frequency', value_description: 'Percentage' },
+    { type: 'decrease_monitoring', name: 'Decrease Monitoring', description: 'Decrease monitoring frequency', value_description: 'Percentage' },
+    { type: 'close_site', name: 'Close Site', description: 'Close an underperforming site', value_description: '1 to close' },
+    { type: 'add_training', name: 'Add Training', description: 'Add training sessions', value_description: 'Number of sessions' },
+    { type: 'extend_timeline', name: 'Extend Timeline', description: 'Extend trial timeline', value_description: 'Weeks' },
+  ];
+
+  const defaultRegions = ['Region Europe', 'Region North America', 'Region Asia Pacific'];
+  const defaultSites = ['Site 1', 'Site 2', 'Site 3', 'Site 4', 'Site 5'];
+  const defaultPresets: PresetScenario[] = [
+    { name: 'Add CRA Support', description: 'Add 2 CRAs to Europe', actions: [{ action_type: 'add_cra', target: 'Region Europe', value: 2 }] },
+    { name: 'Increase Monitoring', description: 'Increase monitoring by 25%', actions: [{ action_type: 'increase_monitoring', target: 'All Sites', value: 25 }] },
+    { name: 'Add Training', description: 'Add training sessions', actions: [{ action_type: 'add_training', target: 'All Sites', value: 2 }] },
+  ];
 
   // Load initial data
   useEffect(() => {
@@ -75,28 +94,41 @@ export const DigitalTwinSimulator: React.FC = () => {
           fetch(`${API_BASE}/regions`),
           fetch(`${API_BASE}/sites`)
         ]);
-        
+
         if (actionTypesRes.ok) {
           const data = await actionTypesRes.json();
-          setActionTypes(data.action_types || []);
+          setActionTypes(data.action_types || defaultActionTypes);
+        } else {
+          setActionTypes(defaultActionTypes);
         }
         if (presetsRes.ok) {
           const data = await presetsRes.json();
-          setPresets(data.presets || []);
+          setPresets(data.presets || defaultPresets);
+        } else {
+          setPresets(defaultPresets);
         }
         if (regionsRes.ok) {
           const data = await regionsRes.json();
-          setRegions(data.regions || []);
+          setRegions(data.regions || defaultRegions);
           if (data.regions?.length > 0) {
             setNewAction(prev => ({ ...prev, target: data.regions[0] }));
           }
+        } else {
+          setRegions(defaultRegions);
         }
         if (sitesRes.ok) {
           const data = await sitesRes.json();
-          setSites(data.sites || []);
+          setSites(data.sites || defaultSites);
+        } else {
+          setSites(defaultSites);
         }
       } catch (err) {
-        console.error('Failed to load initial data:', err);
+        console.error('Failed to load initial data, using defaults:', err);
+        // Use fallback defaults
+        setActionTypes(defaultActionTypes);
+        setPresets(defaultPresets);
+        setRegions(defaultRegions);
+        setSites(defaultSites);
       }
     };
     fetchData();
@@ -120,10 +152,10 @@ export const DigitalTwinSimulator: React.FC = () => {
 
   const runSimulation = useCallback(async () => {
     if (actions.length === 0) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`${API_BASE}/run`, {
         method: 'POST',
@@ -134,11 +166,11 @@ export const DigitalTwinSimulator: React.FC = () => {
           actions: actions
         })
       });
-      
+
       if (!response.ok) {
         throw new Error(`Simulation failed: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       setResult(data);
     } catch (err) {
@@ -193,7 +225,7 @@ export const DigitalTwinSimulator: React.FC = () => {
         <div className="scenario-builder">
           <div className="panel">
             <h2>📋 Build Your Scenario</h2>
-            
+
             {/* Scenario Name */}
             <div className="form-group">
               <label>Scenario Name</label>
@@ -234,7 +266,7 @@ export const DigitalTwinSimulator: React.FC = () => {
                     <option key={at.type} value={at.type}>{at.name}</option>
                   ))}
                 </select>
-                
+
                 <select
                   value={newAction.target}
                   onChange={(e) => setNewAction(prev => ({ ...prev, target: e.target.value }))}
@@ -248,7 +280,7 @@ export const DigitalTwinSimulator: React.FC = () => {
                   </optgroup>
                   <option value="All Sites">All Sites</option>
                 </select>
-                
+
                 <input
                   type="number"
                   value={newAction.value}
@@ -256,8 +288,8 @@ export const DigitalTwinSimulator: React.FC = () => {
                   min="0"
                   step="1"
                 />
-                
-                <button 
+
+                <button
                   className="add-btn"
                   onClick={handleAddCustomAction}
                   disabled={!newAction.target}
@@ -280,7 +312,7 @@ export const DigitalTwinSimulator: React.FC = () => {
                       <span className="action-text">
                         {getActionLabel(action)}: {action.target} ({action.value})
                       </span>
-                      <button 
+                      <button
                         className="remove-btn"
                         onClick={() => removeAction(i)}
                       >
@@ -322,7 +354,7 @@ export const DigitalTwinSimulator: React.FC = () => {
           ) : (
             <div className="panel results-panel">
               <h2>📊 Simulation Results</h2>
-              
+
               {/* Key Metrics */}
               <div className="metrics-grid">
                 <div className="metric-card dqi">
@@ -396,7 +428,7 @@ export const DigitalTwinSimulator: React.FC = () => {
                 <div className="stat">
                   <span className="stat-label">Confidence</span>
                   <div className="confidence-bar">
-                    <div 
+                    <div
                       className="confidence-fill"
                       style={{ width: `${result.confidence_score * 100}%` }}
                     />
