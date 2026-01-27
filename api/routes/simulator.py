@@ -11,7 +11,7 @@ from analytics.simulator import (
     ScenarioType
 )
 
-router = APIRouter(prefix="/simulator", tags=["Digital Twin Simulator"])
+router = APIRouter(tags=["Digital Twin Simulator"])
 
 # Pydantic models for request/response
 class ActionRequest(BaseModel):
