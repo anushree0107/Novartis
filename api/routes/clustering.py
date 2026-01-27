@@ -1,11 +1,3 @@
-"""Clustering API Routes - UI-Ready Advanced Site Clustering Endpoints.
-
-Provides rich, visualization-ready data for dashboards including:
-- Color-coded risk levels
-- Chart-ready data structures  
-- Cluster comparison visualizations
-- Interactive drill-down data
-"""
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -19,6 +11,9 @@ from analytics.clustering.advanced_clusterer import (
     ClusteringResult
 )
 from analytics.clustering.llm import ClusterAnalyst
+from agents.cluster_analyzer import ClusterAnalyzer, SiteAnalyzer
+from sklearn.decomposition import PCA
+import numpy as np
 
 router = APIRouter()
 
@@ -26,6 +21,8 @@ router = APIRouter()
 legacy_clusterer = SiteClusterer()
 advanced_clusterer = AdvancedSiteClusterer()
 analyst = ClusterAnalyst()
+cluster_analyzer = ClusterAnalyzer()
+site_analyzer = SiteAnalyzer()
 
 
 # ============ UI Color Mapping ============
@@ -538,3 +535,275 @@ def _build_ui_result(result: ClusteringResult, display_name: str) -> UIClusterin
         risk_breakdown_chart=risk_breakdown_chart,
         feature_radar_chart=feature_radar_chart
     )
+
+
+# ============ 3D Visualization & Agent Analysis Endpoints ============
+
+class UI3DPoint(BaseModel):
+    """A single point in 3D space representing a site."""
+    site_id: str
+    x: float
+    y: float
+    z: float
+    cluster_id: int
+    cluster_name: str
+    color: str
+    risk_level: str
+    tooltip: Dict[str, Any]
+
+
+class UI3DVisualization(BaseModel):
+    """Complete 3D visualization data."""
+    points: List[UI3DPoint]
+    clusters: List[Dict[str, Any]]
+    method: str
+    reduction: str
+    total_sites: int
+    n_clusters: int
+
+
+@router.get("/advanced/3d", response_model=UI3DVisualization)
+async def get_3d_visualization(
+    method: str = Query("ensemble", description="Clustering method"),
+    n_clusters: Optional[int] = Query(None, description="Number of clusters")
+):
+    """
+    Get 3D visualization data for site clusters.
+    
+    Returns coordinates reduced to 3D using PCA, with cluster assignments and tooltips.
+    Use this data with Plotly.js or Three.js for interactive 3D scatter plots.
+    """
+    try:
+        # Get clustering result
+        if method == "ensemble":
+            result = advanced_clusterer.cluster_ensemble(n_clusters=n_clusters)
+        elif method == "hierarchical":
+            result = advanced_clusterer.cluster_hierarchical(n_clusters=n_clusters)
+        elif method == "gmm":
+            result = advanced_clusterer.cluster_gmm(n_clusters=n_clusters)
+        else:
+            result = advanced_clusterer.cluster_ensemble(n_clusters=n_clusters)
+        
+        if not result:
+            raise HTTPException(status_code=500, detail="Clustering failed - no result returned")
+        
+        # Get feature matrix for dimensionality reduction
+        # _prepare_features returns (DataFrame, scaled_array) tuple  
+        feature_result = advanced_clusterer._prepare_features()
+        if feature_result is None or feature_result[0] is None:
+            raise HTTPException(status_code=500, detail="No feature data available")
+        
+        feature_df = feature_result[0]  # DataFrame with site features
+        site_ids = feature_df.index.tolist()
+        X = feature_result[1]  # Use scaled features for PCA
+        
+        # Reduce to 3D using PCA
+        n_components = min(3, X.shape[1])
+        pca = PCA(n_components=n_components)
+        coords_3d = pca.fit_transform(X)
+        
+        # Build points list
+        points = []
+        site_to_label = result.labels  # Dict[site_id, cluster_id]
+        
+        # Build tooltip data from feature values
+        feature_names = feature_df.columns.tolist()
+        
+        for i, site_id in enumerate(site_ids):
+            cluster_id = site_to_label.get(str(site_id), site_to_label.get(site_id, -1))
+            cluster_color = get_cluster_color(max(0, cluster_id))
+            
+            # Find risk level from profile
+            risk_level = "Unknown"
+            for profile in result.profiles:
+                if profile.cluster_id == cluster_id:
+                    risk_level = profile.risk_level
+                    break
+            
+            # Build tooltip with key metrics
+            tooltip = {}
+            for name in feature_names[:5]:  # Top 5 features
+                tooltip[name] = round(float(feature_df.iloc[i][name]), 3)
+            
+            # Handle 2D or 3D based on PCA components
+            z_val = float(coords_3d[i, 2]) if n_components >= 3 else 0.0
+            
+            points.append(UI3DPoint(
+                site_id=str(site_id),
+                x=float(coords_3d[i, 0]),
+                y=float(coords_3d[i, 1]),
+                z=z_val,
+                cluster_id=max(0, cluster_id),
+                cluster_name=f"Cluster {cluster_id}",
+                color=cluster_color["primary"],
+                risk_level=risk_level,
+                tooltip=tooltip
+            ))
+        
+        # Build cluster summary
+        clusters = []
+        for profile in result.profiles:
+            clusters.append({
+                "cluster_id": profile.cluster_id,
+                "name": f"Cluster {profile.cluster_id}",
+                "size": profile.size,
+                "risk_level": profile.risk_level,
+                "color": get_cluster_color(profile.cluster_id)["primary"],
+                "description": profile.description
+            })
+        
+        return UI3DVisualization(
+            points=points,
+            clusters=clusters,
+            method=method,
+            reduction="pca",
+            total_sites=len(points),
+            n_clusters=result.n_clusters
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"3D visualization error: {str(e)}")
+
+
+@router.get("/advanced/analyze/{cluster_id}")
+async def analyze_cluster_endpoint(
+    cluster_id: int,
+    method: str = Query("ensemble", description="Clustering method used")
+):
+    # Get clustering result
+    if method == "ensemble":
+        result = advanced_clusterer.cluster_ensemble()
+    elif method == "hierarchical":
+        result = advanced_clusterer.cluster_hierarchical()
+    elif method == "gmm":
+        result = advanced_clusterer.cluster_gmm()
+    else:
+        result = advanced_clusterer.cluster_ensemble()
+    
+    if not result:
+        raise HTTPException(status_code=500, detail="No clustering data available")
+    
+    # Find the cluster profile
+    cluster_profile = None
+    for profile in result.profiles:
+        if profile.cluster_id == cluster_id:
+            cluster_profile = profile.to_dict()
+            break
+    
+    if not cluster_profile:
+        raise HTTPException(status_code=404, detail=f"Cluster {cluster_id} not found")
+    
+    # Get sites in this cluster
+    sites_in_cluster = [
+        site_id for site_id, label in result.labels.items() 
+        if label == cluster_id
+    ]
+    
+    # Get all profiles for comparison
+    all_profiles = [p.to_dict() for p in result.profiles]
+    
+    # Run AI analysis
+    analysis = await cluster_analyzer.analyze_cluster(
+        cluster_id=cluster_id,
+        cluster_profile=cluster_profile,
+        all_profiles=all_profiles,
+        sites_in_cluster=sites_in_cluster
+    )
+    
+    # Add cluster color info
+    analysis["cluster_color"] = get_cluster_color(cluster_id)
+    analysis["risk_color"] = get_risk_color(cluster_profile.get("risk_level", "Unknown"))
+    
+    return analysis
+
+
+@router.get("/advanced/analyze/site/{site_id}")
+async def analyze_site_endpoint(
+    site_id: str,
+    method: str = Query("ensemble", description="Clustering method used")
+):
+    """
+    Get AI-powered analysis for a specific site.
+    
+    Returns structured insights including:
+    - Performance summary
+    - Strengths and concerns
+    - Risk level
+    - Specific recommendations
+    - Comparison to cluster peers
+    """
+    try:
+        # Get clustering result
+        if method == "ensemble":
+            result = advanced_clusterer.cluster_ensemble()
+        elif method == "hierarchical":
+            result = advanced_clusterer.cluster_hierarchical()
+        elif method == "gmm":
+            result = advanced_clusterer.cluster_gmm()
+        else:
+            result = advanced_clusterer.cluster_ensemble()
+        
+        if not result:
+            raise HTTPException(status_code=500, detail="No clustering data available")
+        
+        # Get site's cluster
+        cluster_id = result.labels.get(site_id)
+        if cluster_id is None:
+            # Try string conversion
+            cluster_id = result.labels.get(str(site_id))
+        if cluster_id is None:
+            raise HTTPException(status_code=404, detail=f"Site {site_id} not found in clustering")
+        
+        # Get cluster profile
+        cluster_profile = None
+        for profile in result.profiles:
+            if profile.cluster_id == cluster_id:
+                cluster_profile = profile.to_dict()
+                break
+        
+        if not cluster_profile:
+            raise HTTPException(status_code=500, detail=f"Cluster profile not found")
+        
+        # Get site metrics from feature data
+        # _prepare_features returns (DataFrame, scaled_array) tuple
+        feature_result = advanced_clusterer._prepare_features()
+        site_metrics = {}
+        if feature_result is not None and feature_result[0] is not None:
+            feature_df = feature_result[0]  # Get the DataFrame from tuple
+            idx_list = feature_df.index.tolist()
+            if site_id in idx_list:
+                site_metrics = feature_df.loc[site_id].to_dict()
+            elif str(site_id) in idx_list:
+                site_metrics = feature_df.loc[str(site_id)].to_dict()
+        
+        # Get other sites in cluster - ensure labels is a dict
+        labels_dict = result.labels if isinstance(result.labels, dict) else {}
+        cluster_sites = [
+            str(sid) for sid, label in labels_dict.items()
+            if label == cluster_id
+        ]
+        
+        # Run AI analysis
+        analysis = await site_analyzer.analyze_site(
+            site_id=site_id,
+            site_metrics=site_metrics,
+            cluster_id=cluster_id,
+            cluster_profile=cluster_profile,
+            cluster_sites=cluster_sites
+        )
+        
+        # Add color info
+        analysis["cluster_color"] = get_cluster_color(cluster_id)
+        analysis["risk_color"] = get_risk_color(analysis.get("risk_level", "Unknown"))
+        
+        return analysis
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Site analysis error: {str(e)}")
