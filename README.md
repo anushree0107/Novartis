@@ -1,417 +1,257 @@
-# 🧠 SAGE-CODE: Schema-Aware Graph Explorer with Code-Augmented Reasoning
+# 🏥 Novartis Clinical Intelligence Platform
 
-> **S**chema-**A**ware **G**raph **E**xplorer with **C**hain-**O**f-thought **D**riven **E**xecution
+> **Dual-Mode Text-to-SQL System for Clinical Trial Analytics**
 
-A novel multi-modal reasoning framework that seamlessly integrates **Knowledge Graph Traversal**, **LLM-powered Chain-of-Thought Reasoning**, and **Dynamic Code Execution** for complex analytical queries over clinical trial data.
+A unified platform combining two specialized approaches for natural language to SQL conversion over clinical trial data:
 
----
-
-## 🎯 Core Innovation
-
-SAGE-CODE introduces a **Hybrid Reasoning Loop** that dynamically switches between:
-- **Graph Traversal** for relational queries (e.g., "Which sites are in Study 15?")
-- **Code Execution** for analytical queries (e.g., "Which sites have the most issues?")
-
-Unlike traditional RAG systems that treat retrieval and generation as separate phases, SAGE-CODE maintains a **unified reasoning state** that guides both graph exploration and code synthesis.
+| Mode | System | Best For |
+|------|--------|----------|
+| 🧠 **Planning** | SAGE-CODE | Complex analytics, multi-step reasoning |
+| ⚡ **Fast Response** | TRIALS | Direct SQL queries, quick lookups |
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ System Architecture
+
+### High-Level Overview
 
 ```mermaid
 flowchart TB
-    subgraph Input["📥 Input Layer"]
-        Q[User Query]
+    subgraph Input["📥 User Input"]
+        Q["Natural Language Query"]
     end
-
-    subgraph QueryAnalysis["🔍 LLM Query Analysis"]
-        QA[Query Classifier]
-        QA -->|ANALYTICAL| CodePath
-        QA -->|RELATIONAL| GraphPath
+    
+    subgraph Router["🔀 Query Router"]
+        R{Query Complexity<br/>Analysis}
     end
-
-    subgraph InitialRetrieval["🎯 Initial Retrieval"]
-        KW[Keyword Index Lookup]
-        TF[Type Fallback]
-        LLM_IR[LLM-Guided Retrieval]
+    
+    subgraph SAGE["🧠 SAGE-CODE: Planning Mode"]
+        direction TB
+        KG["Knowledge Graph<br/>Clinical Trial Entities"]
+        MH["Multi-Hop RAG<br/>Graph Traversal"]
+        COT["Chain-of-Thought<br/>Reasoning"]
+        CE["Code Executor<br/>Python Analytics"]
+        KG --> MH --> COT --> CE
     end
-
-    subgraph GraphPath["🕸️ Graph Reasoning"]
-        BS[Batched LLM Scoring]
-        CoT[CoT Traversal]
-        Beam[Beam Filtering]
+    
+    subgraph TRIALS["⚡ TRIALS: Fast Response"]
+        direction TB
+        IR["Information Retriever<br/>LSH + Keywords"]
+        SS["Schema Selector<br/>Table/Column Selection"]
+        CG["Candidate Generator<br/>SQL Generation"]
+        UT["Unit Tester<br/>SQL Validation"]
+        RE["Result Explainer<br/>Natural Language"]
+        IR --> SS --> CG --> UT --> RE
     end
-
-    subgraph CodePath["💻 Code Reasoning"]
-        CG[Code Generation]
-        CE[Sandboxed Execution]
-        CR[Code Retry Loop]
+    
+    subgraph Output["📤 Response"]
+        RES["SQL + Insights + Explanation"]
     end
+    
+    Q --> R
+    R -->|Complex Query| SAGE
+    R -->|Simple Query| TRIALS
+    SAGE --> RES
+    TRIALS --> RES
+    
+    style SAGE fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style TRIALS fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style Router fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+```
 
-    subgraph SchemaContext["📊 Schema Context Injection"]
-        DF[DataFrame Schemas]
-        DK[Data Keys Info]
+---
+
+## 🧠 SAGE-CODE Architecture
+
+**SAGE** (Code-Augmented Reasoning on Adaptive Graphs) uses knowledge graph traversal with dynamic code execution for complex analytical queries.
+
+```mermaid
+flowchart LR
+    subgraph Data["📊 Data Layer"]
+        CSV["Clinical Trial<br/>CSV Files"]
+        PG["Processed Data<br/>Tables"]
     end
-
+    
+    subgraph Graph["🕸️ Knowledge Graph"]
+        GB["Graph Builder"]
+        KG["Clinical Graph<br/>NetworkX DiGraph"]
+        
+        subgraph Nodes["Node Types"]
+            S["Studies"]
+            SI["Sites"]
+            P["Patients"]
+            M["Metrics"]
+        end
+    end
+    
+    subgraph Engine["⚙️ SAGE Engine"]
+        IR["Initial Retrieve<br/>Top-K Nodes"]
+        MHT["Multi-Hop Traverse<br/>3-Hop Default"]
+        COT["CoT Reasoning<br/>LLM-Guided"]
+        BS["Batch Scoring<br/>Relevance Filter"]
+    end
+    
+    subgraph Tools["🔧 Agent Tools"]
+        GQ["Graph Query Tools<br/>Study/Site/Patient"]
+        CE["Code Executor<br/>Python Runtime"]
+        DQI["DQI Analytics<br/>Quality Metrics"]
+    end
+    
     subgraph Output["📤 Output"]
-        Ctx[Rich Context]
-        Agent[LLM Agent Response]
+        EX["Executive Summary<br/>Business Insights"]
     end
-
-    Q --> QA
-    QA --> KW
-    KW --> TF
-    TF --> LLM_IR
-    LLM_IR --> BS
-    BS --> CoT
-    CoT -->|TRAVERSE| Beam
-    Beam --> BS
-    CoT -->|CODE| CG
-    CG --> CE
-    CE -->|Error| CR
-    CR --> CG
-    CE -->|Success| Ctx
-    CoT -->|SUFFICIENT| Ctx
-    Ctx --> Agent
-    SchemaContext -.-> CG
-    SchemaContext -.-> CoT
+    
+    CSV --> GB --> KG
+    KG --> Nodes
+    Nodes --> IR
+    IR --> MHT --> COT --> BS
+    BS --> GQ
+    BS --> CE
+    BS --> DQI
+    GQ --> EX
+    CE --> EX
+    DQI --> EX
+    
+    style Graph fill:#e8f5e9,stroke:#4caf50
+    style Engine fill:#fff9c4,stroke:#fbc02d
+    style Tools fill:#e1f5fe,stroke:#03a9f4
 ```
+
+### SAGE-CODE Components
+
+| Component | File | Description |
+|-----------|------|-------------|
+| **SAGEEngine** | `engine.py` | Core retrieval engine with multi-hop traversal, CoT reasoning |
+| **SAGEAgent** | `agent.py` | Main agent interface, tool orchestration |
+| **GraphBuilder** | `graph_builder.py` | Builds knowledge graph from clinical CSV data |
+| **CodeExecutor** | `tools/code_executor.py` | Safe Python execution sandbox |
+| **GraphTools** | `tools/graph_tools.py` | Study, site, patient query tools |
+
+### Key Algorithms
+
+1. **Initial Retrieval**: Keyword + semantic search over graph nodes
+2. **Multi-Hop Traversal**: Beam search through graph edges (default: 3 hops)
+3. **Chain-of-Thought Reasoning**: LLM decides traverse/terminate at each hop
+4. **Batched LLM Scoring**: Efficient relevance scoring of candidates
+5. **Code Execution**: Python code for complex analytics (aggregations, trends)
 
 ---
 
-## 🔬 Detailed Pipeline
+## ⚡ TRIALS Architecture
 
-### Phase 1: Query Analysis
-```mermaid
-flowchart LR
-    subgraph QueryAnalysis["LLM Query Analyzer"]
-        Q[Query Input]
-        P[Analysis Prompt]
-        LLM[LLM Call]
-        R[JSON Response]
-    end
-
-    Q --> P
-    P --> LLM
-    LLM --> R
-
-    R -->|query_type| QT{Query Type}
-    R -->|target_types| TT[Node Types to Search]
-    R -->|key_entities| KE[Specific Entity IDs]
-
-    QT -->|ANALYTICAL| A[Sample Diverse Nodes for Context]
-    QT -->|RELATIONAL| B[Search Target Node Types]
-```
-
-**Query Analysis Prompt:**
-```
-Analyze this clinical trial query and determine:
-1. query_type: "ANALYTICAL" (needs aggregation) or "RELATIONAL" (needs traversal)
-2. target_types: List of node types to search [Site, Study, Subject, ...]
-3. key_entities: Specific entity IDs mentioned
-
-Query: "{query}"
-```
-
----
-
-### Phase 2: Initial Retrieval
+**TRIALS** (Text-to-SQL with RAG, Iterative Agents, & Learning Systems) is a multi-agent pipeline for fast, accurate SQL generation.
 
 ```mermaid
 flowchart TB
-    subgraph Retrieval["Multi-Strategy Retrieval"]
-        Q[Query Tokens]
-        
-        subgraph Strategy1["Strategy 1: Keyword Match"]
-            KI[Inverted Keyword Index]
-            KM[Token Overlap Scoring]
-        end
-        
-        subgraph Strategy2["Strategy 2: LLM Analysis"]
-            LA[Query Type Classification]
-            TS[Target Type Sampling]
-        end
-        
-        subgraph Strategy3["Strategy 3: Structural Boost"]
-            SB[Node Type Weights]
-            DB[Data-Bridge Detection]
-        end
+    subgraph Input["📥 Input"]
+        Q["Natural Language Query"]
+        DB[(PostgreSQL<br/>Database)]
     end
-
-    Q --> KI
-    KI --> KM
-    KM -->|Few Matches| LA
-    LA --> TS
-    TS --> SB
-    SB --> R[Ranked Candidates]
+    
+    subgraph Preprocessing["🔧 Preprocessing"]
+        IDX["LSH Indexer<br/>MinHash Signatures"]
+        VS["Vector Store<br/>Semantic Embeddings"]
+        TD["Table Descriptions<br/>JSON Metadata"]
+    end
+    
+    subgraph Pipeline["🔄 Agent Pipeline"]
+        direction TB
+        
+        subgraph IR["Agent 1: Information Retriever"]
+            IR1["Keyword Extraction"]
+            IR2["LSH Lookup"]
+            IR3["Hint Generation"]
+        end
+        
+        subgraph SS["Agent 2: Schema Selector"]
+            SS1["Table Ranking"]
+            SS2["Column Selection"]
+            SS3["FK Detection"]
+        end
+        
+        subgraph CG["Agent 3: Candidate Generator"]
+            CG1["ToT Reasoning"]
+            CG2["SQL Generation"]
+            CG3["Multiple Candidates"]
+        end
+        
+        subgraph UT["Agent 4: Unit Tester"]
+            UT1["Syntax Check"]
+            UT2["Execution Test"]
+            UT3["Result Validation"]
+        end
+        
+        subgraph RE["Agent 5: Result Explainer"]
+            RE1["Result Formatting"]
+            RE2["NL Explanation"]
+        end
+        
+        IR --> SS --> CG --> UT --> RE
+    end
+    
+    subgraph Output["📤 Output"]
+        SQL["Valid SQL Query"]
+        RES["Query Results"]
+        EXP["Natural Language<br/>Explanation"]
+    end
+    
+    Q --> IR
+    DB --> Preprocessing
+    Preprocessing --> IR
+    RE --> SQL
+    RE --> RES
+    RE --> EXP
+    
+    style IR fill:#ffebee,stroke:#e53935
+    style SS fill:#e8f5e9,stroke:#43a047
+    style CG fill:#e3f2fd,stroke:#1e88e5
+    style UT fill:#fff3e0,stroke:#fb8c00
+    style RE fill:#f3e5f5,stroke:#8e24aa
 ```
 
-**Structural Boost Weights:**
-| Node Type | Boost Score | Rationale |
-|-----------|-------------|-----------|
-| Subject | +0.3 | Bridge between Site/Study and data |
-| MissingPage | +0.4 | High-value analytical target |
-| SafetyDiscrepancy | +0.4 | High-value analytical target |
-| Visit | +0.2 | Container for clinical data |
-| Site | +0.2 | Key aggregation entity |
+### TRIALS Agents
 
----
+| Agent | Role | Key Features |
+|-------|------|--------------|
+| **Information Retriever** | Extract database hints | LSH + keyword extraction, semantic search |
+| **Schema Selector** | Choose relevant schema | Table ranking, FK detection, column pruning |
+| **Candidate Generator** | Generate SQL | Tree-of-Thought reasoning, multiple candidates |
+| **Unit Tester** | Validate SQL | Syntax check, execution test, result validation |
+| **Result Explainer** | Format output | Natural language explanations, formatting |
 
-### Phase 3: Batched LLM Scoring
+### Preprocessing Pipeline
 
 ```mermaid
 flowchart LR
-    subgraph BatchedScoring["Batched Candidate Scoring"]
-        C[All Candidates]
-        B1[Batch 1: 20 nodes]
-        B2[Batch 2: 20 nodes]
-        Bn[Batch N: ≤20 nodes]
-        
-        L1[LLM Call 1]
-        L2[LLM Call 2]
-        Ln[LLM Call N]
-        
-        S[Aggregated Scores]
+    subgraph Data["📊 Database"]
+        T1["Table 1"]
+        T2["Table 2"]
+        TN["Table N"]
     end
-
-    C --> B1 & B2 & Bn
-    B1 --> L1
-    B2 --> L2
-    Bn --> Ln
-    L1 & L2 & Ln --> S
-```
-
-**Batch Selection Prompt:**
-```
-Rate relevance (0-10) of each candidate for the query.
-Consider:
-1. Explicit matches (keywords)
-2. Semantic relationships
-3. **DATA POTENTIAL**: Score HIGHER if node is a key in dataframes
-
-Available DataFrames:
-{dynamic_data_context}
-
-Candidates:
-[0] Site 637 (Site) - LOCATED_IN [DATA_AGGR_KEY]
-[1] Subject 123 (Subject) - ENROLLED_IN
-...
-```
-
-**Novel: Data-Aware Tagging**
-Nodes that can be used as aggregation keys in dataframes receive the `[DATA_AGGR_KEY]` tag, signaling higher computational potential.
-
----
-
-### Phase 4: Chain-of-Thought Guided Traversal
-
-```mermaid
-stateDiagram-v2
-    [*] --> CoTReasoning
     
-    CoTReasoning --> CODE: Query needs aggregation
-    CoTReasoning --> TRAVERSE: Need more context
-    CoTReasoning --> SUFFICIENT: Answer found
-    
-    CODE --> ExecuteCode
-    ExecuteCode --> CheckResult
-    CheckResult --> SUFFICIENT: Relevant data
-    CheckResult --> RetryCode: Error detected
-    RetryCode --> ExecuteCode: Fixed code
-    RetryCode --> TRAVERSE: Max retries exceeded
-    
-    TRAVERSE --> BeamFilter
-    BeamFilter --> CoTReasoning
-    
-    SUFFICIENT --> [*]
-```
-
-**CoT Reasoning Prompt:**
-```
-You are a clinical trial data analyst with Python Pandas capabilities.
-
-DECISION RULES:
-1. Use CODE if query asks for: counts, rankings, statistics
-2. Use TRAVERSE only to find specific entity IDs
-3. Use SUFFICIENT if answer already found
-
-CODE TIPS:
-- Use print() to show results
-- Combine dataframes with pd.merge()
-- Group by site/study for rankings
-
-Response (JSON):
-{
-  "thought": "Brief analysis...",
-  "action": "CODE" | "TRAVERSE" | "SUFFICIENT",
-  "code": "...",
-  "selected_indices": []
-}
-```
-
----
-
-### Phase 5: Code Execution with Retry
-
-```mermaid
-flowchart TB
-    subgraph CodeExecution["Self-Healing Code Execution"]
-        CG[Generated Code]
-        SE[Sandboxed Executor]
-        
-        subgraph ErrorHandling["Error Handling"]
-            EH[Error History]
-            FP[Fix Prompt with All Errors]
-            LLM[LLM Code Fixer]
-        end
-        
-        R{Result Check}
+    subgraph LSH["🔑 LSH Indexing"]
+        MH["MinHash<br/>Signatures"]
+        SIM["Similarity<br/>Index"]
     end
-
-    CG --> SE
-    SE --> R
-    R -->|Error| EH
-    EH --> FP
-    FP --> LLM
-    LLM -->|Fixed Code| SE
-    R -->|Success| Output
-    R -->|Max Retries| Fallback[Graph Traversal Fallback]
-```
-
-**Code Retry Prompt (with Error History):**
-```
-The code failed. Here are ALL the errors so far (DO NOT repeat):
-Attempt 1: Error: 'Series' has no attribute 'reset_name'
-Attempt 2: Error: name 'df' is not defined
-
-Original query: {query}
-Last failed code: {code}
-
-Available DataFrames: esae_processed_df, missing_pages_processed_df, ...
-
-Fix the code and return ONLY corrected Python code:
-```
-
-**Sandboxed Executor Features:**
-- Pre-loaded DataFrames as variables
-- Auto-fix common LLM mistakes (`.to_frame()`, `pd.read_csv`)
-- Auto-wrap expressions in `print()`
-- Restricted `__builtins__` for security
-
----
-
-### Phase 6: Schema Context Injection
-
-```mermaid
-flowchart LR
-    subgraph SchemaGeneration["Dynamic Schema Context"]
-        DF1[esae_processed_df]
-        DF2[missing_pages_df]
-        DFn[...]
-        
-        SC[Schema Generator]
-        
-        CTX[Rich Context String]
+    
+    subgraph Vector["🧮 Vector Store"]
+        EMB["Text<br/>Embeddings"]
+        IDX["FAISS<br/>Index"]
     end
-
-    DF1 & DF2 & DFn --> SC
-    SC --> CTX
-```
-
-**Generated Schema Context:**
-```
-### DataFrame: esae_processed_df
-- Shape: (17098, 11)
-  * discrepancy_id (object): e.g., [68259, 68260, ...]
-  * study_id (object): e.g., [Study 21, Study 22, ...]
-  * site (object): e.g., [Site 1114, Site 1336, ...]
-  * review_status (object): e.g., [Pending for Review, ...]
-```
-
----
-
-## 🔧 Component Details
-
-### 1. Knowledge Graph Structure
-
-| Entity Type | Attributes | Relationships |
-|-------------|------------|---------------|
-| Study | study_id, status, phase | HAS_SITE, HAS_SUBJECT |
-| Site | site_id, country | BELONGS_TO_STUDY, HAS_SUBJECT |
-| Subject | subject_id, status | ENROLLED_AT_SITE, HAS_VISIT |
-| Visit | visit_id, date | SCHEDULED_FOR, HAS_FORM |
-| SafetyDiscrepancy | id, status | REPORTED_BY, AFFECTS |
-| MissingPage | form_id, days_missing | MISSING_FOR |
-
-### 2. LLM Call Budget
-
-| Phase | LLM Calls | Purpose |
-|-------|-----------|---------|
-| Query Analysis | 1 | Classify query type |
-| Batch Scoring | N/batch_size | Score candidates |
-| CoT Reasoning | 1 per hop | Decide next action |
-| Code Retry | 0-3 | Fix failed code |
-| **Total** | **~3-6 per query** | |
-
-### 3. Configuration Parameters
-
-```python
-@dataclass
-class SAGECODEConfig:
-    # Traversal
-    n_hops: int = 3
-    top_k: int = 15
-    beam_width: int = 20
     
-    # Scoring
-    selection_batch_size: int = 20
-    max_candidates_to_score: int = 40
+    subgraph Meta["📋 Metadata"]
+        TD["Table<br/>Descriptions"]
+        FK["Foreign Key<br/>Graph"]
+    end
     
-    # Code Execution
-    max_code_retries: int = 3
+    T1 & T2 & TN --> MH --> SIM
+    T1 & T2 & TN --> EMB --> IDX
+    T1 & T2 & TN --> TD
+    TD --> FK
     
-    # Budget
-    max_llm_calls_per_query: int = 10
-    max_total_time_seconds: int = 45
-```
-
----
-
-## 📊 Experimental Results
-
-| Query Type | Avg LLM Calls | Latency | Accuracy |
-|------------|---------------|---------|----------|
-| Analytical | 3-4 | ~8s | High |
-| Relational | 4-6 | ~12s | High |
-| Hybrid | 5-7 | ~15s | High |
-
----
-
-## 🚀 Quick Start
-
-```python
-from sage_code import SAGECODEAgent
-
-agent = SAGECODEAgent()
-
-# Analytical query
-result = agent.query("Which sites have the most open issues?")
-
-# Relational query
-result = agent.query("What studies is Site 637 enrolled in?")
-```
-
----
-
-## 📚 Citation
-
-```bibtex
-@article{sage-code2024,
-  title={SAGE-CODE: Schema-Aware Graph Explorer with Code-Augmented Reasoning},
-  author={...},
-  journal={...},
-  year={2024}
-}
+    style LSH fill:#e8f5e9,stroke:#4caf50
+    style Vector fill:#e3f2fd,stroke:#2196f3
+    style Meta fill:#fff3e0,stroke:#ff9800
 ```
 
 ---
@@ -419,33 +259,289 @@ result = agent.query("What studies is Site 637 enrolled in?")
 ## 📁 Project Structure
 
 ```
-sage_code/
-├── agent.py           # Main agent interface
-├── engine.py          # Core reasoning engine
-├── config.py          # Configuration classes
-├── prompts.py         # All LLM prompts
-├── models.py          # Data models (HopResult)
-├── graph_builder.py   # Knowledge graph construction
-└── tools/
-    ├── code_executor.py   # Sandboxed Python executor
-    ├── graph_tools.py     # Graph query tools
-    └── base_tool.py       # Tool base class
+Novartis/
+├── 📂 sage_code/                    # SAGE-CODE: Graph RAG (Planning Mode)
+│   ├── 📄 __init__.py               # Package exports
+│   ├── 📄 agent.py                  # SAGEAgent - Main interface
+│   ├── 📄 engine.py                 # SAGEEngine - Core retrieval (920 lines)
+│   ├── 📄 graph_builder.py          # ClinicalTrialGraphBuilder (515 lines)
+│   ├── 📄 config.py                 # SAGEConfig, AgentConfig
+│   ├── 📄 prompts.py                # LLM system prompts
+│   ├── 📄 models.py                 # HopResult data model
+│   └── 📂 tools/                    # Agent tools
+│       ├── 📄 base_tool.py          # BaseTool, ToolRegistry
+│       ├── 📄 code_executor.py      # Python code execution
+│       └── 📄 graph_tools.py        # Graph query tools
+│
+├── 📂 trials/                       # TRIALS: Multi-Agent (Fast Response)
+│   ├── 📄 __init__.py               # Package exports
+│   ├── 📄 trials_sql.py             # Main entry point
+│   ├── 📂 agents/                   # 5 specialized agents
+│   │   ├── 📄 base_agent.py         # BaseAgent class
+│   │   ├── 📄 information_retriever.py
+│   │   ├── 📄 schema_selector.py
+│   │   ├── 📄 candidate_generator.py
+│   │   ├── 📄 unit_tester.py
+│   │   └── 📄 result_explainer.py
+│   ├── 📂 pipeline/
+│   │   └── 📄 orchestrator.py       # Agent orchestration
+│   └── 📂 preprocessing/
+│       └── 📄 indexer.py            # LSH/Vector indexing
+│
+├── 📂 shared/                       # Common utilities
+│   ├── 📂 database/
+│   │   ├── 📄 connection.py         # Database connection pool
+│   │   ├── 📄 data_loader.py        # Data loading utilities
+│   │   └── 📄 schema_manager.py     # Schema introspection
+│   ├── 📂 config/
+│   │   ├── 📄 settings.py           # Global settings
+│   │   └── 📄 table_descriptions.json
+│   └── 📂 utils/
+│       ├── 📄 llm_client.py         # LLM API client
+│       └── 📄 token_utils.py        # Token counting
+│
+├── 📂 docs/                         # Documentation
+│   ├── 📄 SAGE_CODE_Report.pdf
+│   └── 📄 TRIALS_Report.pdf
+│
+├── 📂 processed_data/               # Clinical trial data
+├── 📂 api/                          # REST API endpoints
+├── 📂 tests/                        # Unit/integration tests
+├── 📄 README.md                     # This file
+├── 📄 requirements.txt              # Python dependencies
+└── 📄 .env.example                  # Environment template
 ```
 
 ---
 
-## 🔑 Key Contributions
+## 🚀 Getting Started
 
-1. **Hybrid Reasoning Loop**: Unified framework that dynamically switches between graph traversal and code execution based on query semantics.
+### Prerequisites
 
-2. **Data-Aware Pruning**: Novel scoring mechanism that prioritizes nodes with high computational potential (keys in dataframes).
+- Python 3.10+
+- PostgreSQL 14+
+- LLM API access (Groq, OpenRouter, or Ollama)
 
-3. **Schema Context Injection**: Dynamic injection of DataFrame schemas into prompts for accurate code generation.
+### Installation
 
-4. **Self-Healing Code Execution**: Retry mechanism with error history accumulation for improved code fixes.
+```bash
+# Clone repository
+git clone https://github.com/anushree0107/Novartis.git
+cd Novartis
+git checkout unified-text2sql
 
-5. **Batched LLM Scoring**: Efficient candidate evaluation with parallel batch processing.
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or: venv\Scripts\activate  # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Configuration
+
+Create `.env` file from template:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your credentials:
+
+```env
+# LLM Configuration
+GROQ_API_KEY=gsk_xxxxxxxxxxxxx
+OPENROUTER_API_KEY=sk-or-xxxxxxxxxxxxx
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=clinical_trials
+DB_USER=postgres
+DB_PASSWORD=your_password
+
+# Optional: Ollama (local LLM)
+OLLAMA_HOST=http://localhost:11434
+```
 
 ---
 
-*SAGE-CODE: Where Knowledge Graphs Meet Code Execution*
+## 💻 Usage
+
+### SAGE-CODE (Planning Mode)
+
+```python
+from sage_code import SAGEAgent, SAGEConfig
+
+# Initialize with custom config
+config = SAGEConfig(
+    n_hops=3,
+    top_k=10,
+    beam_width=3
+)
+
+agent = SAGEAgent(config=config)
+
+# Complex analytical query
+response = agent.query(
+    "Which sites have the highest DQI scores and what factors "
+    "contribute to their success? Compare across regions."
+)
+
+print(response.answer)
+print(response.code_results)  # Python analytics output
+```
+
+### TRIALS (Fast Response Mode)
+
+```python
+from trials import Orchestrator
+from shared.database import get_connection
+
+# Initialize
+conn = get_connection()
+orchestrator = Orchestrator(connection=conn)
+
+# Simple SQL query
+result = orchestrator.run("Get total patient enrollment by site")
+
+print(result.sql)
+# SELECT site_id, COUNT(*) as enrollment
+# FROM patients
+# GROUP BY site_id
+# ORDER BY enrollment DESC
+
+print(result.explanation)
+# "This query counts the number of patients enrolled at each site..."
+```
+
+---
+
+## 📊 Mode Selection Guide
+
+```mermaid
+flowchart TD
+    Q["User Query"] --> A{Query Type?}
+    
+    A -->|"Simple lookup<br/>COUNT, LIST, GET"| T["⚡ TRIALS"]
+    A -->|"Complex analysis<br/>WHY, COMPARE, PREDICT"| S["🧠 SAGE-CODE"]
+    
+    T --> T1["Direct SQL generation"]
+    T --> T2["Fast response ~2-5s"]
+    
+    S --> S1["Graph traversal + reasoning"]
+    S --> S2["Code execution for analytics"]
+    S --> S3["Thorough response ~10-30s"]
+    
+    style T fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style S fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+```
+
+| Query Type | Recommended Mode | Example |
+|------------|------------------|---------|
+| Simple lookup | ⚡ TRIALS | "List all active studies" |
+| Count/aggregate | ⚡ TRIALS | "How many patients enrolled?" |
+| Multi-entity analysis | 🧠 SAGE-CODE | "Compare DQI across sites by region" |
+| Root cause analysis | 🧠 SAGE-CODE | "Why is Site 001 underperforming?" |
+| Trend analysis | 🧠 SAGE-CODE | "Enrollment trends with predictions" |
+| What-if scenarios | 🧠 SAGE-CODE | "Impact of adding 5 new sites" |
+
+---
+
+## 🔧 Configuration Options
+
+### SAGE-CODE Configuration
+
+```python
+from sage_code import SAGEConfig
+
+config = SAGEConfig(
+    # Retrieval settings
+    n_hops=3,                    # Max graph traversal depth
+    top_k=10,                    # Initial retrieval count
+    beam_width=3,                # Beam search width
+    min_score_threshold=0.3,     # Minimum relevance score
+    
+    # LLM settings
+    provider="groq",             # groq, openrouter, ollama
+    model_name="qwen/qwen3-32b", # Model to use
+    temperature=0.0,             # Deterministic outputs
+    
+    # Code execution
+    code_timeout=30,             # Max execution time (seconds)
+    max_retries=3                # Retry on failures
+)
+```
+
+### TRIALS Configuration
+
+```python
+from shared.config import Settings
+
+settings = Settings(
+    # Agent settings
+    max_candidates=5,            # SQL candidates to generate
+    execution_timeout=30,        # SQL timeout (seconds)
+    
+    # Caching
+    use_caching=True,            # Enable result caching
+    cache_ttl=3600,              # Cache TTL (seconds)
+    
+    # LSH settings
+    num_perm=128,                # MinHash permutations
+    threshold=0.5                # Similarity threshold
+)
+```
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [SAGE-CODE Report](docs/SAGE_CODE_Report.pdf) | Technical deep-dive into Graph RAG architecture |
+| [TRIALS Report](docs/TRIALS_Report.pdf) | Multi-agent pipeline documentation |
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest tests/
+
+# Run specific test suite
+pytest tests/test_sage_engine.py
+pytest tests/test_trials_agents.py
+
+# Run with coverage
+pytest --cov=sage_code --cov=trials tests/
+```
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## 👥 Team
+
+**Clinical Intelligence Platform Team**  
+Novartis AI/ML Engineering
+
+---
+
+*Built with ❤️ for better clinical trial analytics*
