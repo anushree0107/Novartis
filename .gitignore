@@ -87,3 +87,12 @@ Gemini_Generated_Image_*.png
 # Root package files (unused)
 /package.json
 /package-lock.json
+
+# SAGE-CODE generated reports and documentation
+sage_code/*.pdf
+sage_code/*.md
+sage_code/*.html
+sage_code/diagrams/
+sage_code/convert_to_pdf.py
+sage_code/render_diagrams_pdf.py
+sage_code/simple_pdf.py

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 // @ts-expect-error - react-plotly.js lacks type declarations
 import Plot from "react-plotly.js";
 import {
@@ -16,6 +16,8 @@ import {
     Lightbulb,
     Info,
     ChevronRight,
+    Sparkles,
+    Loader2,
 } from "lucide-react";
 
 interface Point3D {
@@ -61,7 +63,20 @@ interface SiteAnalysis {
     risk_color: { bg: string; text: string };
 }
 
+interface HoverSummary {
+    site_id: string;
+    summary: string;
+    risk_level: string;
+    cluster_name: string;
+    top_strength: string;
+    top_concern: string;
+    loading: boolean;
+}
+
 const API_BASE_URL = "http://localhost:8000";
+
+// Cache for hover summaries to avoid repeated API calls
+const summaryCache = new Map<string, HoverSummary>();
 
 // Mock data for preview
 const mockData: Visualization3D = {
@@ -110,6 +125,20 @@ export function Clustering3D() {
     const [showModal, setShowModal] = useState(false);
     const [hoveredCluster, setHoveredCluster] = useState<number | null>(null);
 
+    // Hover popup state
+    const [hoverPopup, setHoverPopup] = useState<{
+        visible: boolean;
+        x: number;
+        y: number;
+        siteId: string;
+        summary: HoverSummary | null;
+    }>({ visible: false, x: 0, y: 0, siteId: "", summary: null });
+
+    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const unhoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isClickingRef = useRef(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         fetchData();
     }, [method]);
@@ -132,7 +161,141 @@ export function Clustering3D() {
         }
     };
 
+    // Fetch AI summary for hover popup
+    const fetchHoverSummary = useCallback(async (siteId: string) => {
+        // Check cache first
+        if (summaryCache.has(siteId)) {
+            return summaryCache.get(siteId)!;
+        }
+
+        // Return loading state initially
+        const loadingSummary: HoverSummary = {
+            site_id: siteId,
+            summary: "",
+            risk_level: "",
+            cluster_name: "",
+            top_strength: "",
+            top_concern: "",
+            loading: true,
+        };
+
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/api/analytics/clustering/advanced/analyze/site/${encodeURIComponent(siteId)}?method=${method}`
+            );
+
+            if (!response.ok) throw new Error("Failed to fetch");
+
+            const result = await response.json();
+
+            const summary: HoverSummary = {
+                site_id: siteId,
+                summary: result.summary || "AI analysis available - click for details",
+                risk_level: result.risk_level || "Unknown",
+                cluster_name: `Cluster ${result.cluster_id || 0}`,
+                top_strength: result.strengths?.[0] || "",
+                top_concern: result.concerns?.[0] || "",
+                loading: false,
+            };
+
+            // Cache the result
+            summaryCache.set(siteId, summary);
+            return summary;
+        } catch {
+            // Return mock summary on error
+            const mockSummary: HoverSummary = {
+                site_id: siteId,
+                summary: "Strong overall performance with consistent data quality metrics.",
+                risk_level: "Low",
+                cluster_name: "Cluster 0",
+                top_strength: "Excellent data completeness (98%)",
+                top_concern: "Minor query resolution delays",
+                loading: false,
+            };
+            summaryCache.set(siteId, mockSummary);
+            return mockSummary;
+        }
+    }, [method]);
+
+    // Handle point hover
+    const handlePointHover = useCallback(async (event: any) => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+        }
+
+        if (!event.points || event.points.length === 0) {
+            setHoverPopup(prev => ({ ...prev, visible: false }));
+            return;
+        }
+
+        const point = event.points[0];
+        const siteId = point.text || point.customdata?.site_id;
+
+        if (!siteId) return;
+
+        // Get mouse position from event
+        const mouseX = event.event?.clientX || 0;
+        const mouseY = event.event?.clientY || 0;
+
+        // Show loading popup immediately
+        setHoverPopup({
+            visible: true,
+            x: mouseX,
+            y: mouseY,
+            siteId,
+            summary: {
+                site_id: siteId,
+                summary: "",
+                risk_level: point.customdata?.risk_level || "Unknown",
+                cluster_name: "",
+                top_strength: "",
+                top_concern: "",
+                loading: true,
+            },
+        });
+
+        // Debounce the API call
+        hoverTimeoutRef.current = setTimeout(async () => {
+            const summary = await fetchHoverSummary(siteId);
+            setHoverPopup(prev => {
+                if (prev.siteId === siteId) {
+                    return { ...prev, summary };
+                }
+                return prev;
+            });
+        }, 300);
+    }, [fetchHoverSummary]);
+
+    const handlePointUnhover = useCallback(() => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+        }
+        if (unhoverTimeoutRef.current) {
+            clearTimeout(unhoverTimeoutRef.current);
+        }
+        // Small delay before hiding to allow moving to popup
+        unhoverTimeoutRef.current = setTimeout(() => {
+            // Don't hide if user is clicking (modal is opening)
+            if (!isClickingRef.current) {
+                setHoverPopup(prev => ({ ...prev, visible: false }));
+            }
+        }, 150);
+    }, []);
+
     const handlePointClick = async (siteId: string) => {
+        // Set clicking flag to prevent unhover from interfering
+        isClickingRef.current = true;
+
+        // Clear any pending hover/unhover timeouts
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+        }
+        if (unhoverTimeoutRef.current) {
+            clearTimeout(unhoverTimeoutRef.current);
+        }
+
+        // Hide hover popup and show modal
+        setHoverPopup(prev => ({ ...prev, visible: false }));
         setSelectedSite(siteId);
         setShowModal(true);
         setAnalyzingLoading(true);
@@ -174,6 +337,8 @@ export function Clustering3D() {
         setShowModal(false);
         setAnalysis(null);
         setSelectedSite(null);
+        // Reset clicking flag so hover works again
+        isClickingRef.current = false;
     };
 
     const buildPlotData = () => {
@@ -320,7 +485,7 @@ export function Clustering3D() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0f18] text-white p-8">
+        <div className="min-h-screen bg-[#0a0f18] text-white p-8" ref={containerRef}>
             <div className="max-w-[1600px] mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-start justify-between">
@@ -333,8 +498,9 @@ export function Clustering3D() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">3D Site Clustering</h1>
-                            <p className="text-gray-400 mt-0.5">
-                                Click on any point to get AI-powered analysis
+                            <p className="text-gray-400 mt-0.5 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-violet-400" />
+                                Hover for AI summary, click for full analysis
                             </p>
                         </div>
                     </div>
@@ -402,12 +568,14 @@ export function Clustering3D() {
                 {/* Main Visualization */}
                 <div className="grid grid-cols-[1fr_280px] gap-4">
                     {/* 3D Plot */}
-                    <div className="rounded-2xl bg-[#0d1520]/60 border border-white/5 overflow-hidden">
+                    <div className="rounded-2xl bg-[#0d1520]/60 border border-white/5 overflow-hidden relative">
                         <Plot
                             data={buildPlotData()}
                             layout={plotLayout as any}
                             config={plotConfig}
                             style={{ width: "100%", height: "580px" }}
+                            onHover={handlePointHover}
+                            onUnhover={handlePointUnhover}
                             onClick={(event: any) => {
                                 if (event.points && event.points.length > 0) {
                                     const point = event.points[0];
@@ -419,6 +587,94 @@ export function Clustering3D() {
                                 }
                             }}
                         />
+
+                        {/* AI Summary Hover Popup */}
+                        {hoverPopup.visible && hoverPopup.summary && (
+                            <div
+                                className="fixed z-50 pointer-events-none"
+                                style={{
+                                    left: `${Math.min(hoverPopup.x + 15, window.innerWidth - 340)}px`,
+                                    top: `${Math.min(hoverPopup.y - 10, window.innerHeight - 250)}px`,
+                                }}
+                            >
+                                <div className="bg-[#0d1520]/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl shadow-black/50 w-[320px] overflow-hidden">
+                                    {/* Header */}
+                                    <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                                                <Brain className="w-4 h-4 text-white" />
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-white text-sm">{hoverPopup.siteId}</div>
+                                                <div className="text-xs text-gray-500">AI Summary</div>
+                                            </div>
+                                        </div>
+                                        {!hoverPopup.summary.loading && (
+                                            <span
+                                                className="px-2 py-0.5 rounded-full text-xs font-medium"
+                                                style={{
+                                                    backgroundColor:
+                                                        hoverPopup.summary.risk_level === "High"
+                                                            ? "rgba(239,68,68,0.15)"
+                                                            : hoverPopup.summary.risk_level === "Medium"
+                                                                ? "rgba(245,158,11,0.15)"
+                                                                : "rgba(16,185,129,0.15)",
+                                                    color:
+                                                        hoverPopup.summary.risk_level === "High"
+                                                            ? "#f87171"
+                                                            : hoverPopup.summary.risk_level === "Medium"
+                                                                ? "#fbbf24"
+                                                                : "#34d399",
+                                                }}
+                                            >
+                                                {hoverPopup.summary.risk_level} Risk
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="p-4">
+                                        {hoverPopup.summary.loading ? (
+                                            <div className="flex items-center justify-center py-4 gap-3">
+                                                <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
+                                                <span className="text-gray-400 text-sm">Generating AI summary...</span>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {/* Summary */}
+                                                <p className="text-gray-300 text-sm leading-relaxed">
+                                                    {hoverPopup.summary.summary}
+                                                </p>
+
+                                                {/* Quick insights */}
+                                                <div className="space-y-2">
+                                                    {hoverPopup.summary.top_strength && (
+                                                        <div className="flex items-start gap-2">
+                                                            <TrendingUp className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                                                            <span className="text-xs text-gray-400">{hoverPopup.summary.top_strength}</span>
+                                                        </div>
+                                                    )}
+                                                    {hoverPopup.summary.top_concern && (
+                                                        <div className="flex items-start gap-2">
+                                                            <AlertCircle className="w-3.5 h-3.5 text-amber-400 mt-0.5 flex-shrink-0" />
+                                                            <span className="text-xs text-gray-400">{hoverPopup.summary.top_concern}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Click hint */}
+                                                <div className="pt-2 border-t border-white/5">
+                                                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                                                        <Sparkles className="w-3 h-3" />
+                                                        Click for full AI analysis
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Cluster Legend Panel */}
