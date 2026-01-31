@@ -134,6 +134,8 @@ INSTRUCTIONS:
 1. Use the data above to find evidence of problems (missing pages, days outstanding).
 2. Construct a sharp, aggressive argument (max 100 words) citing specific numbers from the data.
 3. Be dramatic but factual - use the actual numbers provided.
+4. DO NOT include any headers, labels, or role descriptions in your response. Just provide your argument directly.
+5. DO NOT use markdown formatting like ** or ##. Write plain text only.
 """
         
         input_messages = list(state["messages"])
@@ -165,6 +167,8 @@ INSTRUCTIONS:
 1. Use the data above to find mitigating factors (connections to studies, context for the numbers).
 2. Construct a polite, persuasive counter-argument (max 100 words).
 3. Acknowledge issues but provide perspective - put the numbers in context.
+4. DO NOT include any headers, labels, or role descriptions in your response. Just provide your counter-argument directly.
+5. DO NOT use markdown formatting like ** or ##. Write plain text only.
 """
         
         input_messages = list(state["messages"])
@@ -190,13 +194,15 @@ INSTRUCTIONS:
 SITE DATA:
 {site_data}
 
-Review the debate above and provide:
+Review the debate above and provide your judgment in this format (use plain text, no markdown):
 
-**Verdict**: [KEEP / WATCH / CLOSE]
+Verdict: [KEEP or WATCH or CLOSE]
 
-**Reasoning**: Summarize the key evidence from both sides (2-3 sentences).
+Reasoning: Summarize the key evidence from both sides (2-3 sentences).
 
-**Recommendation**: One specific action item.
+Recommendation: One specific action item.
+
+DO NOT use any markdown formatting like ** or ##. Write plain text only.
 """
         response = self.llm.invoke([SystemMessage(content=prompt)] + state["messages"])
         return {

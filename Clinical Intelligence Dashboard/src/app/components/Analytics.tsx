@@ -1,6 +1,8 @@
+'use client';
+
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
-import { ChevronDown, Loader2, Sparkles, TrendingUp, Award, Target, Zap, Brain } from 'lucide-react';
+import { ChevronDown, Loader2, Sparkles, TrendingUp, Award, Target, Zap, Brain, BarChart3, ArrowUpRight, Activity } from 'lucide-react';
 import { fetchBenchmark as fetchBenchmarkApi, fetchRankings } from '../services/api';
 
 interface AnalyticsProps {
@@ -34,7 +36,6 @@ export function Analytics({ onAiClick }: AnalyticsProps) {
         strengths: response.strengths,
         weaknesses: response.weaknesses,
       });
-      // Auto-generate AI analysis
       generateBenchmarkAnalysis(response.overall_percentile || 82, response.overall_performance || 'Excellent');
     } catch (err: any) {
       setError(err.message || 'Failed to fetch benchmark');
@@ -80,7 +81,7 @@ export function Analytics({ onAiClick }: AnalyticsProps) {
 
     try {
       const response = await fetchRankings(metric, 10);
-      const mapped = response.rankings.map((r, idx) => ({
+      const mapped = response.rankings.map((r: any) => ({
         rank: r.rank,
         site: r.entity_id,
         score: r.value,
@@ -131,30 +132,47 @@ ${data.site} is ${data.rank <= 3 ? 'a top performer' : data.rank <= 5 ? 'perform
   };
 
   const getRankBadge = (rank: number) => {
-    if (rank === 1) return <div className="rank-badge gold">🥇</div>;
-    if (rank === 2) return <div className="rank-badge silver">🥈</div>;
-    if (rank === 3) return <div className="rank-badge bronze">🥉</div>;
-    return <div className="rank-badge bg-gray-700 text-gray-300">{rank}</div>;
+    if (rank === 1) return (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center text-amber-900 font-bold text-sm shadow-lg shadow-amber-500/30">
+        1
+      </div>
+    );
+    if (rank === 2) return (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center text-slate-800 font-bold text-sm shadow-lg shadow-slate-400/30">
+        2
+      </div>
+    );
+    if (rank === 3) return (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-orange-900 font-bold text-sm shadow-lg shadow-orange-500/30">
+        3
+      </div>
+    );
+    return (
+      <div className="w-8 h-8 rounded-full bg-slate-700/50 flex items-center justify-center text-slate-300 font-medium text-sm border border-slate-600/50">
+        {rank}
+      </div>
+    );
   };
 
   const getPerformanceBadge = (perf: string) => {
-    const styles: Record<string, { bg: string; text: string; glow: string }> = {
-      Excellent: { bg: 'from-emerald-400 to-emerald-600', text: 'text-white', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.4)]' },
-      Good: { bg: 'from-blue-400 to-blue-600', text: 'text-white', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.4)]' },
-      Average: { bg: 'from-amber-400 to-amber-600', text: 'text-white', glow: 'shadow-[0_0_20px_rgba(245,158,11,0.4)]' },
-      Poor: { bg: 'from-red-400 to-red-600', text: 'text-white', glow: 'shadow-[0_0_20px_rgba(239,68,68,0.4)]' },
+    const styles: Record<string, string> = {
+      Excellent: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25',
+      Good: 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25',
+      Average: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25',
+      Poor: 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/25',
     };
-    const style = styles[perf] || styles.Average;
-    return `bg-gradient-to-r ${style.bg} ${style.text} ${style.glow}`;
+    return styles[perf] || styles.Average;
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="premium-card p-3 !transform-none">
-          <p className="text-sm font-medium text-white">{payload[0].payload.site}</p>
-          <p className="text-xs text-gray-300">Score: <span className="font-semibold text-blue-400">{payload[0].value}</span></p>
-          <p className="text-xs text-gray-400">Click for AI insights</p>
+        <div className="bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4 shadow-2xl">
+          <p className="text-sm font-semibold text-white mb-1">{payload[0].payload.site}</p>
+          <p className="text-xs text-slate-300">Score: <span className="font-bold text-cyan-400">{payload[0].value}</span></p>
+          <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
+            <Sparkles className="w-3 h-3" /> Click for AI insights
+          </p>
         </div>
       );
     }
@@ -162,319 +180,426 @@ ${data.site} is ${data.rank <= 3 ? 'a top performer' : data.rank <= 5 ? 'perform
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header with Gradient */}
+    <div className="space-y-8 p-6">
+      {/* Enhanced Header */}
       <div className="relative">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-            <TrendingUp className="w-5 h-5 text-white" />
+        <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-3xl blur-2xl" />
+        <div className="relative flex items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl blur-lg opacity-50" />
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-xl">
+              <BarChart3 className="w-7 h-7 text-white" />
+            </div>
           </div>
           <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-[gradient-shift_3s_ease_infinite]">
+            <h2 className="text-3xl font-bold text-white tracking-tight">
               Analytics & Benchmarking
             </h2>
-            <p className="text-gray-400 text-sm">
+            <p className="text-slate-400 mt-1">
               Compare performance metrics and view site rankings
             </p>
           </div>
         </div>
       </div>
 
-      {/* Controls - Premium Styling */}
-      <div className="premium-card p-5">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="relative flex-1 min-w-[180px]">
-            <input
-              type="text"
-              placeholder="Enter Site ID (e.g., 018)"
-              value={siteId}
-              onChange={(e) => setSiteId(e.target.value)}
-              className="w-full bg-[#0f1419] text-white px-4 py-3 rounded-xl border-2 border-white/10 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none placeholder-gray-400 transition-all duration-300"
-            />
-          </div>
+      {/* Enhanced Controls */}
+      <div className="relative group">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="relative flex-1 min-w-[200px]">
+              <input
+                type="text"
+                placeholder="Enter Site ID (e.g., 018)"
+                value={siteId}
+                onChange={(e) => setSiteId(e.target.value)}
+                className="w-full bg-slate-900/50 text-white px-4 py-3.5 rounded-xl border border-slate-600/50 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none placeholder-slate-500 transition-all duration-300"
+              />
+            </div>
 
-          <button
-            onClick={fetchBenchmark}
-            disabled={loading === 'benchmark'}
-            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:shadow-[0_8px_30px_rgba(59,130,246,0.4)] transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 flex items-center gap-2 font-medium"
-          >
-            {loading === 'benchmark' ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Target className="w-4 h-4" />
-            )}
-            Get Benchmark
-          </button>
-
-          <div className="relative flex-1 min-w-[180px]">
-            <select
-              value={metric}
-              onChange={(e) => setMetric(e.target.value)}
-              className="w-full bg-[#0f1419] text-white px-4 py-3 pr-10 rounded-xl border-2 border-white/10 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none appearance-none transition-all duration-300"
+            <button
+              onClick={fetchBenchmark}
+              disabled={loading === 'benchmark'}
+              className="group/btn relative px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-xl hover:shadow-cyan-500/25 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2 overflow-hidden"
             >
-              <option value="dqi">DQI Score</option>
-              <option value="enrollment">Enrollment Rate</option>
-              <option value="query">Query Resolution</option>
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-400 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+              <span className="relative flex items-center gap-2">
+                {loading === 'benchmark' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Target className="w-4 h-4" />
+                )}
+                Get Benchmark
+              </span>
+            </button>
+
+            <div className="relative flex-1 min-w-[180px]">
+              <select
+                value={metric}
+                onChange={(e) => setMetric(e.target.value)}
+                className="w-full bg-slate-900/50 text-white px-4 py-3.5 pr-10 rounded-xl border border-slate-600/50 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none appearance-none transition-all duration-300"
+              >
+                <option value="dqi">DQI Score</option>
+                <option value="enrollment">Enrollment Rate</option>
+                <option value="query">Query Resolution</option>
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+
+            <button
+              onClick={loadRankings}
+              disabled={loading === 'rankings'}
+              className="group/btn relative px-6 py-3.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/25 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+              <span className="relative flex items-center gap-2">
+                {loading === 'rankings' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Award className="w-4 h-4" />
+                )}
+                Load Rankings
+              </span>
+            </button>
           </div>
 
-          <button
-            onClick={loadRankings}
-            disabled={loading === 'rankings'}
-            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:shadow-[0_8px_30px_rgba(139,92,246,0.4)] transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 flex items-center gap-2 font-medium"
-          >
-            {loading === 'rankings' ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Award className="w-4 h-4" />
-            )}
-            Load Rankings
-          </button>
+          {error && (
+            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-red-400">!</span>
+              </div>
+              {error}
+            </div>
+          )}
         </div>
-
-        {error && (
-          <div className="mt-3 p-3 bg-red-900/30 border border-red-500/30 rounded-lg text-red-400 text-sm">
-            {error}
-          </div>
-        )}
       </div>
 
-      {/* Main Grid - 3 Columns with AI Analysis in Center */}
+      {/* Main Grid - 3 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Benchmark Card - Left */}
-        <div className={`premium-card p-6 animate-slide-up ${!benchmarkData ? 'flex items-center justify-center min-h-[300px]' : ''}`}>
-          {benchmarkData ? (
-            <>
-              <div className="flex items-center gap-2 mb-6">
-                <Target className="w-5 h-5 text-blue-500" />
-                <h3 className="text-lg font-semibold text-white">Performance Benchmark</h3>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-4 bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-xl">
-                  <div className="text-3xl font-bold metric-value mb-1">{benchmarkData.percentile}th</div>
-                  <div className="text-xs text-gray-400 font-medium">Percentile</div>
-                </div>
-                <div className="text-center p-4 bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-xl">
-                  <div className="text-3xl font-bold metric-value mb-1">#{benchmarkData.rank}</div>
-                  <div className="text-xs text-gray-400 font-medium">Rank</div>
-                </div>
-                <div className="text-center p-4 bg-gradient-to-br from-green-900/30 to-emerald-900/30 rounded-xl">
-                  <div className={`inline-block px-3 py-1.5 rounded-lg text-sm font-medium mb-1 ${getPerformanceBadge(benchmarkData.performance)}`}>
-                    {benchmarkData.performance}
+        {/* Benchmark Card */}
+        <div className="group relative">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className={`relative bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 h-full transition-all duration-300 ${!benchmarkData ? 'flex items-center justify-center min-h-[400px]' : ''}`}>
+            {benchmarkData ? (
+              <>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                    <Target className="w-5 h-5 text-white" />
                   </div>
-                  <div className="text-xs text-gray-400 font-medium">Status</div>
+                  <h3 className="text-lg font-semibold text-white">Performance Benchmark</h3>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="p-3 bg-green-900/20 rounded-xl border border-green-500/20">
-                  <div className="flex items-center gap-2 text-sm text-green-400 font-medium mb-2">
-                    <Zap className="w-4 h-4" />
-                    Strengths
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 p-4">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 rounded-full blur-2xl" />
+                    <div className="relative">
+                      <div className="text-3xl font-bold text-cyan-400">{benchmarkData.percentile}th</div>
+                      <div className="text-xs text-slate-400 mt-1 font-medium">Percentile</div>
+                    </div>
                   </div>
-                  <ul className="space-y-1.5">
-                    {benchmarkData.strengths.map((str: string, idx: number) => (
-                      <li key={idx} className="text-xs text-gray-300 flex items-start gap-1.5">
-                        <span className="text-green-500 mt-0.5">•</span>
-                        {str}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="p-3 bg-amber-900/20 rounded-xl border border-amber-500/20">
-                  <div className="flex items-center gap-2 text-sm text-amber-400 font-medium mb-2">
-                    <Target className="w-4 h-4" />
-                    Focus Areas
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 p-4">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full blur-2xl" />
+                    <div className="relative">
+                      <div className="text-3xl font-bold text-purple-400">#{benchmarkData.rank}</div>
+                      <div className="text-xs text-slate-400 mt-1 font-medium">Rank</div>
+                    </div>
                   </div>
-                  <ul className="space-y-1.5">
-                    {benchmarkData.weaknesses.map((weak: string, idx: number) => (
-                      <li key={idx} className="text-xs text-gray-300 flex items-start gap-1.5">
-                        <span className="text-amber-500 mt-0.5">•</span>
-                        {weak}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-4">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-2xl" />
+                    <div className="relative">
+                      <div className={`inline-block px-2.5 py-1 rounded-lg text-xs font-semibold ${getPerformanceBadge(benchmarkData.performance)}`}>
+                        {benchmarkData.performance}
+                      </div>
+                      <div className="text-xs text-slate-400 mt-1.5 font-medium">Status</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <button
-                onClick={() => generateBenchmarkAnalysis(benchmarkData.percentile, benchmarkData.performance)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/30 rounded-xl text-blue-400 font-medium hover:border-blue-400 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <Sparkles className="w-4 h-4" />
-                Generate AI Analysis
-              </button>
-            </>
-          ) : (
-            <div className="text-center text-gray-400">
-              <Target className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">Enter a Site ID to view benchmark</p>
-            </div>
-          )}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/20">
+                    <div className="flex items-center gap-2 text-sm text-emerald-400 font-semibold mb-3">
+                      <Zap className="w-4 h-4" />
+                      Strengths
+                    </div>
+                    <ul className="space-y-2">
+                      {benchmarkData.strengths.map((str: string, idx: number) => (
+                        <li key={idx} className="text-xs text-slate-300 flex items-start gap-2">
+                          <ArrowUpRight className="w-3 h-3 text-emerald-400 mt-0.5 flex-shrink-0" />
+                          {str}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20">
+                    <div className="flex items-center gap-2 text-sm text-amber-400 font-semibold mb-3">
+                      <Target className="w-4 h-4" />
+                      Focus Areas
+                    </div>
+                    <ul className="space-y-2">
+                      {benchmarkData.weaknesses.map((weak: string, idx: number) => (
+                        <li key={idx} className="text-xs text-slate-300 flex items-start gap-2">
+                          <Activity className="w-3 h-3 text-amber-400 mt-0.5 flex-shrink-0" />
+                          {weak}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => generateBenchmarkAnalysis(benchmarkData.percentile, benchmarkData.performance)}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 font-medium hover:border-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 flex items-center justify-center gap-2 group/ai"
+                >
+                  <Sparkles className="w-4 h-4 group-hover/ai:animate-pulse" />
+                  Generate AI Analysis
+                </button>
+              </>
+            ) : (
+              <div className="text-center">
+                <div className="relative w-20 h-20 mx-auto mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl blur-xl" />
+                  <div className="relative w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 flex items-center justify-center">
+                    <Target className="w-9 h-9 text-slate-500" />
+                  </div>
+                </div>
+                <h4 className="text-slate-300 font-medium mb-2">No Benchmark Data</h4>
+                <p className="text-sm text-slate-500 max-w-[200px] mx-auto">Enter a Site ID and click "Get Benchmark" to view performance metrics</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* AI Analysis Card - Center */}
-        <div className={`ai-analysis-card p-6 animate-slide-up ${!aiAnalysis ? 'flex items-center justify-center min-h-[300px]' : ''}`} style={{ animationDelay: '0.1s' }}>
-          {aiAnalysis ? (
-            <>
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-blue-500/20">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                  <Brain className="w-5 h-5 text-white" />
+        {/* AI Analysis Card */}
+        <div className="group relative">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-2xl blur opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className={`relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-6 h-full transition-all duration-300 ${!aiAnalysis ? 'flex items-center justify-center min-h-[400px]' : ''}`}>
+            {aiAnalysis ? (
+              <>
+                <div className="flex items-center gap-3 mb-5 pb-5 border-b border-purple-500/20">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl blur opacity-50" />
+                    <div className="relative w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                      <Brain className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">AI Powered</span>
+                    <h3 className="text-base font-semibold text-white mt-0.5">{aiAnalysis.title}</h3>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-xs font-medium text-blue-400 bg-blue-900/30 px-2 py-0.5 rounded">AI Analysis</span>
-                  <h3 className="text-base font-semibold text-white">{aiAnalysis.title}</h3>
-                </div>
-              </div>
 
-              <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2">
-                {aiAnalysis.content.split('\n').map((line, idx) => {
-                  if (line.startsWith('**') && line.endsWith('**')) {
-                    return (
-                      <h4 key={idx} className="text-sm font-semibold text-white mt-3 mb-1 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                        {line.replace(/\*\*/g, '')}
-                      </h4>
-                    );
-                  }
-                  if (line.startsWith('- ')) {
-                    return (
-                      <li key={idx} className="text-sm text-gray-300 ml-4 list-none flex items-start gap-2">
-                        <span className="text-blue-400 mt-1">→</span>
-                        {line.slice(2)}
-                      </li>
-                    );
-                  }
-                  if (line.trim()) {
-                    return <p key={idx} className="text-sm text-gray-300 leading-relaxed">{line}</p>;
-                  }
-                  return null;
-                })}
+                <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
+                  {aiAnalysis.content.split('\n').map((line, idx) => {
+                    if (line.startsWith('**') && line.endsWith('**')) {
+                      return (
+                        <h4 key={idx} className="text-sm font-semibold text-white mt-4 mb-2 flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full" />
+                          {line.replace(/\*\*/g, '')}
+                        </h4>
+                      );
+                    }
+                    if (line.startsWith('- ')) {
+                      return (
+                        <div key={idx} className="text-sm text-slate-300 ml-3 flex items-start gap-2">
+                          <span className="text-purple-400 mt-0.5">→</span>
+                          <span>{line.slice(2)}</span>
+                        </div>
+                      );
+                    }
+                    if (line.trim()) {
+                      return <p key={idx} className="text-sm text-slate-300 leading-relaxed">{line}</p>;
+                    }
+                    return null;
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="text-center">
+                <div className="relative w-24 h-24 mx-auto mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-3xl blur-2xl animate-pulse" />
+                  <div className="relative w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl border border-purple-500/30 flex items-center justify-center">
+                    <Brain className="w-11 h-11 text-purple-400" />
+                  </div>
+                </div>
+                <h4 className="text-slate-200 font-semibold mb-2">AI Analysis</h4>
+                <p className="text-sm text-slate-400 max-w-[220px] mx-auto">Click on benchmark or ranking items to generate intelligent insights</p>
               </div>
-            </>
-          ) : (
-            <div className="text-center text-gray-400">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-2xl flex items-center justify-center">
-                <Brain className="w-8 h-8 text-blue-400" />
-              </div>
-              <p className="text-sm font-medium text-gray-300 mb-1">AI Analysis</p>
-              <p className="text-xs text-gray-400">Click on benchmark or ranking items<br />to generate intelligent insights</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* Rankings Table - Right */}
-        <div className={`premium-card p-6 animate-slide-up ${!rankingsData ? 'flex items-center justify-center min-h-[300px]' : ''}`} style={{ animationDelay: '0.2s' }}>
-          {rankingsData ? (
-            <>
-              <div className="flex items-center gap-2 mb-6">
-                <Award className="w-5 h-5 text-purple-500" />
-                <h3 className="text-lg font-semibold text-white">Site Rankings</h3>
-              </div>
-
-              <div className="space-y-1 max-h-[350px] overflow-y-auto pr-2">
-                <div className="grid grid-cols-4 gap-3 pb-2 border-b border-white/10 text-xs font-medium text-gray-400 sticky top-0 bg-[#1a2332]/95 backdrop-blur-sm">
-                  <div>Rank</div>
-                  <div>Site</div>
-                  <div>Score</div>
-                  <div>Percentile</div>
+        {/* Rankings Table */}
+        <div className="group relative">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className={`relative bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 h-full transition-all duration-300 ${!rankingsData ? 'flex items-center justify-center min-h-[400px]' : ''}`}>
+            {rankingsData ? (
+              <>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <Award className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Site Rankings</h3>
                 </div>
 
-                {rankingsData.map((item: any) => (
-                  <div
-                    key={item.rank}
-                    onClick={() => generateSiteAnalysis(item)}
-                    className="grid grid-cols-4 gap-3 py-3 text-sm text-gray-200 table-row-hover rounded-lg px-2 cursor-pointer group"
-                  >
-                    <div>{getRankBadge(item.rank)}</div>
-                    <div className="font-medium group-hover:text-blue-400 transition-colors">{item.site}</div>
-                    <div className="font-semibold text-white">{Number(item.score).toFixed(2)}</div>
-                    <div className="text-gray-400">{Number(item.percentile).toFixed(2)}th</div>
+                <div className="space-y-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="grid grid-cols-4 gap-3 pb-3 border-b border-slate-700/50 text-xs font-semibold text-slate-400 uppercase tracking-wider sticky top-0 bg-slate-800/95 backdrop-blur-sm">
+                    <div>Rank</div>
+                    <div>Site</div>
+                    <div>Score</div>
+                    <div>Percentile</div>
                   </div>
-                ))}
+
+                  {rankingsData.map((item: any) => (
+                    <div
+                      key={item.rank}
+                      onClick={() => generateSiteAnalysis(item)}
+                      className="grid grid-cols-4 gap-3 py-3 text-sm text-slate-200 rounded-xl px-2 cursor-pointer transition-all duration-200 hover:bg-slate-700/30 hover:scale-[1.02] group/row"
+                    >
+                      <div>{getRankBadge(item.rank)}</div>
+                      <div className="font-medium group-hover/row:text-cyan-400 transition-colors flex items-center">{item.site}</div>
+                      <div className="font-bold text-white flex items-center">{Number(item.score).toFixed(1)}</div>
+                      <div className="text-slate-400 flex items-center">{Number(item.percentile).toFixed(0)}th</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-center">
+                <div className="relative w-20 h-20 mx-auto mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl blur-xl" />
+                  <div className="relative w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 flex items-center justify-center">
+                    <Award className="w-9 h-9 text-slate-500" />
+                  </div>
+                </div>
+                <h4 className="text-slate-300 font-medium mb-2">No Rankings Data</h4>
+                <p className="text-sm text-slate-500 max-w-[200px] mx-auto">Click "Load Rankings" to view top performing sites</p>
               </div>
-            </>
-          ) : (
-            <div className="text-center text-gray-400">
-              <Award className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">Click "Load Rankings" to view</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Leaderboard Chart - Enhanced */}
+      {/* Leaderboard Chart */}
       {rankingsData && (
-        <div className="premium-card p-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-blue-500" />
-              <h3 className="text-lg font-semibold text-white">Top 10 Leaderboard</h3>
+        <div className="group relative">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Top 10 Leaderboard</h3>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-700/30 px-3 py-1.5 rounded-full">
+                <Sparkles className="w-3 h-3 text-purple-400" />
+                Click bars for AI insights
+              </div>
             </div>
-            <p className="text-xs text-gray-400 bg-white/10 px-3 py-1 rounded-full">
-              Click bars for AI insights
-            </p>
-          </div>
 
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={rankingsData} layout="vertical" margin={{ left: 10, right: 30 }}>
-              <XAxis type="number" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis dataKey="site" type="category" stroke="#9ca3af" width={80} fontSize={12} tickLine={false} axisLine={false} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }} />
-              <Bar
-                dataKey="score"
-                radius={[0, 8, 8, 0]}
-                onClick={(data) => {
-                  if (data && data.site) {
-                    generateSiteAnalysis(data);
-                  }
-                }}
-                style={{ cursor: 'pointer' }}
-              >
-                {rankingsData.map((_: any, index: number) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={index === 0 ? 'url(#goldGradient)' : index === 1 ? 'url(#silverGradient)' : index === 2 ? 'url(#bronzeGradient)' : 'url(#blueGradient)'}
-                  />
-                ))}
-              </Bar>
-              <defs>
-                <linearGradient id="goldGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#fbbf24" />
-                  <stop offset="100%" stopColor="#f59e0b" />
-                </linearGradient>
-                <linearGradient id="silverGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#9ca3af" />
-                  <stop offset="100%" stopColor="#6b7280" />
-                </linearGradient>
-                <linearGradient id="bronzeGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#d97706" />
-                  <stop offset="100%" stopColor="#b45309" />
-                </linearGradient>
-                <linearGradient id="blueGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#2563eb" />
-                </linearGradient>
-              </defs>
-            </BarChart>
-          </ResponsiveContainer>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={rankingsData} layout="vertical" margin={{ left: 10, right: 30 }}>
+                <XAxis type="number" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis dataKey="site" type="category" stroke="#64748b" width={80} fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }} />
+                <Bar
+                  dataKey="score"
+                  radius={[0, 8, 8, 0]}
+                  onClick={(data) => {
+                    if (data && data.site) {
+                      generateSiteAnalysis(data);
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {rankingsData.map((_: any, index: number) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={index === 0 ? 'url(#goldGradient)' : index === 1 ? 'url(#silverGradient)' : index === 2 ? 'url(#bronzeGradient)' : 'url(#cyanGradient)'}
+                    />
+                  ))}
+                </Bar>
+                <defs>
+                  <linearGradient id="goldGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#fbbf24" />
+                    <stop offset="100%" stopColor="#f59e0b" />
+                  </linearGradient>
+                  <linearGradient id="silverGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#94a3b8" />
+                    <stop offset="100%" stopColor="#64748b" />
+                  </linearGradient>
+                  <linearGradient id="bronzeGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#fb923c" />
+                    <stop offset="100%" stopColor="#ea580c" />
+                  </linearGradient>
+                  <linearGradient id="cyanGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#22d3ee" />
+                    <stop offset="100%" stopColor="#0891b2" />
+                  </linearGradient>
+                </defs>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Enhanced Empty State */}
       {!benchmarkData && !rankingsData && (
-        <div className="premium-card p-12 text-center animate-slide-up">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-2xl flex items-center justify-center">
-            <TrendingUp className="w-10 h-10 text-blue-400" />
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl blur-2xl" />
+          <div className="relative bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-12 text-center">
+            <div className="relative w-28 h-28 mx-auto mb-8">
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/30 to-purple-500/30 rounded-3xl blur-2xl animate-pulse" />
+              <div className="relative w-28 h-28 bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl border border-slate-700/50 flex items-center justify-center">
+                <TrendingUp className="w-14 h-14 text-slate-500" />
+              </div>
+            </div>
+            <h3 className="text-xl font-semibold text-slate-200 mb-3">Get Started with Analytics</h3>
+            <p className="text-slate-400 text-sm max-w-md mx-auto mb-8">
+              Enter a site ID to fetch benchmark data, or load rankings to see the top performing sites in your study
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                  <Target className="w-4 h-4 text-cyan-400" />
+                </div>
+                <span>Benchmark</span>
+              </div>
+              <div className="w-8 h-px bg-slate-700" />
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                  <Brain className="w-4 h-4 text-purple-400" />
+                </div>
+                <span>AI Analysis</span>
+              </div>
+              <div className="w-8 h-px bg-slate-700" />
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="w-8 h-8 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center">
+                  <Award className="w-4 h-4 text-pink-400" />
+                </div>
+                <span>Rankings</span>
+              </div>
+            </div>
           </div>
-          <h3 className="text-lg font-semibold text-gray-200 mb-2">Get Started with Analytics</h3>
-          <p className="text-gray-400 text-sm max-w-md mx-auto">
-            Enter a site ID to fetch benchmark data, or load rankings to see the top performing sites
-          </p>
         </div>
       )}
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(51, 65, 85, 0.3);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(100, 116, 139, 0.5);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(100, 116, 139, 0.7);
+        }
+      `}</style>
     </div>
   );
 }

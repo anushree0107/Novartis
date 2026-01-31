@@ -1,13 +1,35 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Brain, Zap, Code, Clock } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import { executeQuery, executeNexusQuery, QueryResponse, NexusQueryResponse } from '../services/api';
+"use client";
 
-type QueryMode = 'planning' | 'fast';
+import React from "react"
+
+import { useState, useRef, useEffect } from "react";
+import {
+    Send,
+    Loader2,
+    Brain,
+    Zap,
+    Code,
+    Clock,
+    MessageSquare,
+    Sparkles,
+    ChevronDown,
+    CheckCircle2,
+    XCircle,
+    Table,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import {
+    executeQuery,
+    executeNexusQuery,
+    type QueryResponse,
+    type NexusQueryResponse,
+} from "../services/api";
+
+type QueryMode = "planning" | "fast";
 
 interface Message {
     id: string;
-    type: 'user' | 'assistant';
+    type: "user" | "assistant";
     content: string;
     mode: QueryMode;
     timestamp: Date;
@@ -16,19 +38,23 @@ interface Message {
         timing?: Record<string, number>;
         success?: boolean;
         error?: string;
-        executionResult?: any;
+        executionResult?: {
+            data?: Record<string, unknown>[];
+            columns?: string[];
+        };
     };
 }
 
 export function Chat() {
-    const [mode, setMode] = useState<QueryMode>('fast');
-    const [input, setInput] = useState('');
+    const [mode, setMode] = useState<QueryMode>("fast");
+    const [input, setInput] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
+    const [sqlExpanded, setSqlExpanded] = useState<Record<string, boolean>>({});
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
     useEffect(() => {
@@ -36,10 +62,10 @@ export function Chat() {
     }, [messages]);
 
     const exampleQueries = [
-        'How many studies are in the database?',
-        'What is the average DQI score across all sites?',
-        'Which sites have critical alerts?',
-        'Show enrollment status by region',
+        { icon: Table, text: "How many studies are in the database?" },
+        { icon: Sparkles, text: "What is the average DQI score across all sites?" },
+        { icon: MessageSquare, text: "Which sites have critical alerts?" },
+        { icon: Code, text: "Show enrollment status by region" },
     ];
 
     const handleSend = async () => {
@@ -47,35 +73,38 @@ export function Chat() {
 
         const userMessage: Message = {
             id: Date.now().toString(),
-            type: 'user',
+            type: "user",
             content: input,
             mode,
             timestamp: new Date(),
         };
 
-        setMessages(prev => [...prev, userMessage]);
-        setInput('');
+        setMessages((prev) => [...prev, userMessage]);
+        setInput("");
         setLoading(true);
 
         try {
             let response: Message;
 
-            if (mode === 'fast') {
-                // Fast Mode - Trials Text-to-SQL
+            if (mode === "fast") {
                 const result: NexusQueryResponse = await executeNexusQuery(input);
 
-                // Format execution result as the main answer if available
-                let mainContent = '';
-                if (result.execution_result && result.execution_result.data && result.execution_result.data.length > 0) {
+                let mainContent = "";
+                if (
+                    result.execution_result?.data &&
+                    result.execution_result.data.length > 0
+                ) {
                     const data = result.execution_result.data;
-                    const columns = result.execution_result.columns || Object.keys(data[0]);
+                    const columns =
+                        result.execution_result.columns || Object.keys(data[0]);
 
-                    // Create markdown table
-                    let table = '| ' + columns.join(' | ') + ' |\n';
-                    table += '| ' + columns.map(() => '---').join(' | ') + ' |\n';
-                    data.slice(0, 20).forEach((row: any) => {
-                        const values = columns.map((col: string) => String(row[col] ?? ''));
-                        table += '| ' + values.join(' | ') + ' |\n';
+                    let table = "| " + columns.join(" | ") + " |\n";
+                    table += "| " + columns.map(() => "---").join(" | ") + " |\n";
+                    data.slice(0, 20).forEach((row: Record<string, unknown>) => {
+                        const values = columns.map((col: string) =>
+                            String(row[col] ?? "")
+                        );
+                        table += "| " + values.join(" | ") + " |\n";
                     });
                     if (data.length > 20) {
                         table += `\n*Showing 20 of ${data.length} rows*`;
@@ -84,14 +113,14 @@ export function Chat() {
                 } else if (result.explanation) {
                     mainContent = result.explanation;
                 } else {
-                    mainContent = 'Query executed successfully. No results returned.';
+                    mainContent = "Query executed successfully. No results returned.";
                 }
 
                 response = {
                     id: (Date.now() + 1).toString(),
-                    type: 'assistant',
+                    type: "assistant",
                     content: mainContent,
-                    mode: 'fast',
+                    mode: "fast",
                     timestamp: new Date(),
                     metadata: {
                         sql: result.sql,
@@ -102,13 +131,12 @@ export function Chat() {
                     },
                 };
             } else {
-                // Planning Mode - SAGE-CODE
                 const result: QueryResponse = await executeQuery(input);
                 response = {
                     id: (Date.now() + 1).toString(),
-                    type: 'assistant',
+                    type: "assistant",
                     content: result.answer,
-                    mode: 'planning',
+                    mode: "planning",
                     timestamp: new Date(),
                     metadata: {
                         timing: result.timing,
@@ -117,230 +145,368 @@ export function Chat() {
                 };
             }
 
-            setMessages(prev => [...prev, response]);
-        } catch (error: any) {
+            setMessages((prev) => [...prev, response]);
+        } catch (error: unknown) {
             const errorMessage: Message = {
                 id: (Date.now() + 1).toString(),
-                type: 'assistant',
-                content: `Error: ${error.message || 'Failed to process query'}`,
+                type: "assistant",
+                content: `Error: ${error instanceof Error ? error.message : "Failed to process query"}`,
                 mode,
                 timestamp: new Date(),
-                metadata: { success: false, error: error.message },
+                metadata: {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
             };
-            setMessages(prev => [...prev, errorMessage]);
+            setMessages((prev) => [...prev, errorMessage]);
         } finally {
             setLoading(false);
         }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
         }
     };
 
+    const toggleSql = (id: string) => {
+        setSqlExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const formatTime = (date: Date) => {
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    };
+
     return (
-        <div className="flex flex-col h-[calc(100vh-180px)]">
-            {/* Header with Mode Toggle */}
-            <div className="flex items-center justify-between mb-4">
-                <div>
-                    <h2 className="text-xl font-semibold bg-gradient-to-r from-[#60a5fa] to-[#3b82f6] bg-clip-text text-transparent">
-                        AI Query Assistant
-                    </h2>
-                    <p className="text-gray-300 text-sm">
-                        Ask questions about your clinical trial data
-                    </p>
-                </div>
-
-                {/* Mode Toggle */}
-                <div className="flex bg-[#0f1419] rounded-lg p-1">
-                    <button
-                        onClick={() => setMode('planning')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${mode === 'planning'
-                            ? 'bg-[#1a2332] text-blue-400 shadow-sm'
-                            : 'text-gray-300 hover:text-white'
-                            }`}
-                    >
-                        <Brain className="w-4 h-4" />
-                        Planning
-                    </button>
-                    <button
-                        onClick={() => setMode('fast')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${mode === 'fast'
-                            ? 'bg-[#1a2332] text-orange-400 shadow-sm'
-                            : 'text-gray-300 hover:text-white'
-                            }`}
-                    >
-                        <Zap className="w-4 h-4" />
-                        Fast
-                    </button>
-                </div>
-            </div>
-
-            {/* Mode Description */}
-            <div className={`mb-4 p-3 rounded-lg text-sm ${mode === 'planning'
-                ? 'bg-blue-900/30 text-blue-300 border border-blue-500/30'
-                : 'bg-orange-900/30 text-orange-300 border border-orange-500/30'
-                }`}>
-                {mode === 'planning' ? (
-                    <div className="flex items-center gap-2">
-                        <Brain className="w-4 h-4" />
-                        <span><strong>Planning Mode:</strong> Uses SAGE-CODE with graph reasoning for detailed analysis</span>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4" />
-                        <span><strong>Fast Mode:</strong> Trials Text-to-SQL pipeline for quick SQL generation</span>
-                    </div>
-                )}
-            </div>
-
-            {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto bg-[#0f1419] rounded-lg p-4 space-y-4">
-                {messages.length === 0 ? (
-                    <div className="text-center text-gray-400 py-8">
-                        <p className="mb-4">Start a conversation by asking a question</p>
-                        <div className="flex flex-wrap justify-center gap-2">
-                            {exampleQueries.map((query, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => setInput(query)}
-                                    className="px-3 py-1.5 bg-[#1a2332] text-gray-200 text-sm rounded-full border border-white/10 hover:border-blue-400 hover:text-blue-400 transition-colors"
-                                >
-                                    {query}
-                                </button>
-                            ))}
+        <div className="min-h-screen bg-[#0a0f18] text-white p-6">
+            <div className="w-full flex flex-col h-[calc(100vh-48px)]">
+                {/* Header */}
+                <div className="mb-6">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="relative">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                                    <MessageSquare className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#0a0f18]" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-white">
+                                    AI Query Assistant
+                                </h1>
+                                <p className="text-gray-400 text-sm">
+                                    Ask questions about your clinical trial data
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    messages.map((msg) => (
-                        <div
-                            key={msg.id}
-                            className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                            <div
-                                className={`max-w-[80%] rounded-lg p-4 ${msg.type === 'user'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-[#1a2332] border border-white/10 shadow-sm'
+
+                        {/* Mode Toggle */}
+                        <div className="flex items-center gap-2 p-1 bg-[#0d1520] rounded-xl border border-white/5 ml-auto mr-4">
+                            <button
+                                type="button"
+                                onClick={() => setMode("planning")}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "planning"
+                                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25"
+                                    : "text-gray-400 hover:text-white hover:bg-white/5"
                                     }`}
                             >
-                                {/* Mode Badge for Assistant */}
-                                {msg.type === 'assistant' && (
-                                    <div className={`flex items-center gap-1 text-xs mb-2 ${msg.mode === 'planning' ? 'text-blue-400' : 'text-orange-400'
-                                        }`}>
-                                        {msg.mode === 'planning' ? <Brain className="w-3 h-3" /> : <Zap className="w-3 h-3" />}
-                                        {msg.mode === 'planning' ? 'Planning Mode' : 'Fast Mode'}
-                                    </div>
-                                )}
+                                <Brain className="w-4 h-4" />
+                                <span>Planning</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMode("fast")}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "fast"
+                                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-orange-500/25"
+                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    }`}
+                            >
+                                <Zap className="w-4 h-4" />
+                                <span>Fast</span>
+                            </button>
+                        </div>
+                    </div>
 
-                                {/* Message Content */}
-                                <div className={`prose prose-sm max-w-none ${msg.type === 'user' ? 'prose-invert' : 'prose-invert'}`}>
-                                    <ReactMarkdown
-                                        components={{
-                                            strong: ({ children }) => <span className="font-semibold text-blue-400">{children}</span>,
-                                            p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-100">{children}</p>,
-                                            ul: ({ children }) => <ul className="list-disc pl-4 mb-2 text-gray-100">{children}</ul>,
-                                            ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 text-gray-100">{children}</ol>,
-                                            li: ({ children }) => <li className="mb-1 text-gray-100">{children}</li>,
-                                            code: ({ children }) => <code className="bg-[#0f1419] px-1 rounded text-sm text-green-400">{children}</code>,
-                                        }}
+                    {/* Mode Description */}
+                    <div
+                        className={`mt-4 flex items-center gap-3 px-4 py-3 rounded-xl text-sm ${mode === "planning"
+                            ? "bg-blue-500/10 border border-blue-500/20"
+                            : "bg-amber-500/10 border border-amber-500/20"
+                            }`}
+                    >
+                        {mode === "planning" ? (
+                            <>
+                                <Brain
+                                    className={`w-5 h-5 ${mode === "planning" ? "text-blue-400" : "text-amber-400"}`}
+                                />
+                                <span className="text-gray-300">
+                                    <span
+                                        className={`font-semibold ${mode === "planning" ? "text-blue-400" : "text-amber-400"}`}
                                     >
-                                        {msg.content}
-                                    </ReactMarkdown>
-                                </div>
+                                        Planning Mode:
+                                    </span>{" "}
+                                    Uses SAGE-CODE with graph reasoning for detailed analysis
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <Zap className="w-5 h-5 text-amber-400" />
+                                <span className="text-gray-300">
+                                    <span className="font-semibold text-amber-400">
+                                        Fast Mode:
+                                    </span>{" "}
+                                    Trials Text-to-SQL pipeline for quick SQL generation
+                                </span>
+                            </>
+                        )}
+                    </div>
+                </div>
 
-                                {/* Metadata (SQL, Timing) */}
-                                {msg.type === 'assistant' && msg.metadata && (
-                                    <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
-                                        {/* SQL */}
-                                        {msg.metadata.sql && (
-                                            <div className="bg-gray-900 text-green-400 p-2 rounded text-xs font-mono overflow-x-auto">
-                                                <div className="flex items-center gap-1 text-gray-400 mb-1">
-                                                    <Code className="w-3 h-3" />
-                                                    SQL
+                {/* Chat Area */}
+                <div className="flex-1 overflow-y-auto rounded-2xl bg-[#0d1520]/50 border border-white/5 p-4">
+                    {messages.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                            <div className="relative mb-6">
+                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 flex items-center justify-center">
+                                    <Sparkles className="w-10 h-10 text-violet-400" />
+                                </div>
+                                <div className="absolute inset-0 rounded-2xl bg-violet-500/20 blur-xl" />
+                            </div>
+                            <h3 className="text-lg font-medium text-white mb-2">
+                                Start a conversation
+                            </h3>
+                            <p className="text-gray-500 text-sm mb-8 max-w-md">
+                                Ask questions about your clinical trial data using natural
+                                language
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
+                                {exampleQueries.map((query, idx) => (
+                                    <button
+                                        type="button"
+                                        key={idx}
+                                        onClick={() => setInput(query.text)}
+                                        className="group flex items-center gap-3 px-4 py-3 bg-[#0d1520] border border-white/5 rounded-xl text-left text-sm text-gray-300 hover:border-violet-500/30 hover:bg-violet-500/5 transition-all"
+                                    >
+                                        <query.icon className="w-4 h-4 text-gray-500 group-hover:text-violet-400 transition-colors shrink-0" />
+                                        <span className="line-clamp-1">{query.text}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {messages.map((msg) => (
+                                <div
+                                    key={msg.id}
+                                    className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
+                                >
+                                    <div
+                                        className={`max-w-[85%] ${msg.type === "user"
+                                            ? "bg-gradient-to-br from-violet-600 to-purple-600 rounded-2xl rounded-br-md"
+                                            : "bg-[#151d2d] border border-white/5 rounded-2xl rounded-bl-md"
+                                            } p-4`}
+                                    >
+                                        {/* Mode & Time Badge */}
+                                        {msg.type === "assistant" && (
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <div
+                                                    className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium ${msg.mode === "planning"
+                                                        ? "bg-blue-500/20 text-blue-400"
+                                                        : "bg-amber-500/20 text-amber-400"
+                                                        }`}
+                                                >
+                                                    {msg.mode === "planning" ? (
+                                                        <Brain className="w-3 h-3" />
+                                                    ) : (
+                                                        <Zap className="w-3 h-3" />
+                                                    )}
+                                                    {msg.mode === "planning" ? "Planning" : "Fast"}
                                                 </div>
-                                                {msg.metadata.sql}
+                                                <span className="text-xs text-gray-500">
+                                                    {formatTime(msg.timestamp)}
+                                                </span>
+                                                {msg.metadata?.success !== undefined && (
+                                                    <div
+                                                        className={`flex items-center gap-1 text-xs ${msg.metadata.success ? "text-emerald-400" : "text-red-400"}`}
+                                                    >
+                                                        {msg.metadata.success ? (
+                                                            <CheckCircle2 className="w-3 h-3" />
+                                                        ) : (
+                                                            <XCircle className="w-3 h-3" />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* User timestamp */}
+                                        {msg.type === "user" && (
+                                            <div className="flex justify-end mb-2">
+                                                <span className="text-xs text-white/60">
+                                                    {formatTime(msg.timestamp)}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Content */}
+                                        <div
+                                            className={`prose prose-sm max-w-none ${msg.type === "user" ? "text-white" : "prose-invert"}`}
+                                        >
+                                            <ReactMarkdown
+                                                components={{
+                                                    strong: ({ children }) => (
+                                                        <span className="font-semibold text-cyan-400">
+                                                            {children}
+                                                        </span>
+                                                    ),
+                                                    p: ({ children }) => (
+                                                        <p className="mb-2 last:mb-0 text-gray-200 leading-relaxed">
+                                                            {children}
+                                                        </p>
+                                                    ),
+                                                    ul: ({ children }) => (
+                                                        <ul className="list-disc pl-4 mb-2 text-gray-200">
+                                                            {children}
+                                                        </ul>
+                                                    ),
+                                                    ol: ({ children }) => (
+                                                        <ol className="list-decimal pl-4 mb-2 text-gray-200">
+                                                            {children}
+                                                        </ol>
+                                                    ),
+                                                    li: ({ children }) => (
+                                                        <li className="mb-1 text-gray-200">{children}</li>
+                                                    ),
+                                                    code: ({ children }) => (
+                                                        <code className="bg-black/30 px-1.5 py-0.5 rounded text-sm text-emerald-400 font-mono">
+                                                            {children}
+                                                        </code>
+                                                    ),
+                                                    table: ({ children }) => (
+                                                        <div className="overflow-x-auto my-3 rounded-lg border border-white/10">
+                                                            <table className="w-full text-sm">
+                                                                {children}
+                                                            </table>
+                                                        </div>
+                                                    ),
+                                                    thead: ({ children }) => (
+                                                        <thead className="bg-white/5 text-gray-300">
+                                                            {children}
+                                                        </thead>
+                                                    ),
+                                                    th: ({ children }) => (
+                                                        <th className="px-3 py-2 text-left font-medium border-b border-white/10">
+                                                            {children}
+                                                        </th>
+                                                    ),
+                                                    td: ({ children }) => (
+                                                        <td className="px-3 py-2 text-gray-400 border-b border-white/5">
+                                                            {children}
+                                                        </td>
+                                                    ),
+                                                }}
+                                            >
+                                                {msg.content}
+                                            </ReactMarkdown>
+                                        </div>
+
+                                        {/* Metadata */}
+                                        {msg.type === "assistant" && msg.metadata?.sql && (
+                                            <div className="mt-4 pt-3 border-t border-white/10">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleSql(msg.id)}
+                                                    className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors"
+                                                >
+                                                    <Code className="w-3.5 h-3.5" />
+                                                    <span>Generated SQL</span>
+                                                    <ChevronDown
+                                                        className={`w-3.5 h-3.5 transition-transform ${sqlExpanded[msg.id] ? "rotate-180" : ""}`}
+                                                    />
+                                                </button>
+                                                {sqlExpanded[msg.id] && (
+                                                    <pre className="mt-2 p-3 bg-black/40 rounded-lg text-xs text-emerald-400 font-mono overflow-x-auto">
+                                                        {msg.metadata.sql}
+                                                    </pre>
+                                                )}
                                             </div>
                                         )}
 
                                         {/* Timing */}
-                                        {msg.metadata.timing && (
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                <Clock className="w-3 h-3" />
+                                        {msg.type === "assistant" && msg.metadata?.timing && (
+                                            <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
+                                                <Clock className="w-3.5 h-3.5" />
                                                 <span>
                                                     {msg.metadata.timing.total_time
                                                         ? `${msg.metadata.timing.total_time}s`
                                                         : msg.metadata.timing.total
                                                             ? `${msg.metadata.timing.total}s`
-                                                            : 'N/A'
-                                                    }
+                                                            : "N/A"}
                                                 </span>
-                                                {msg.metadata.success !== undefined && (
-                                                    <span className={msg.metadata.success ? 'text-green-600' : 'text-red-600'}>
-                                                        {msg.metadata.success ? '✓ Success' : '✗ Failed'}
-                                                    </span>
-                                                )}
                                             </div>
                                         )}
-
-                                        {/* Execution Result Preview */}
-                                        {msg.metadata.executionResult && (
-                                            <details className="text-xs">
-                                                <summary className="cursor-pointer text-blue-400 hover:underline">
-                                                    View Execution Result
-                                                </summary>
-                                                <pre className="bg-[#0f1419] p-2 rounded mt-1 overflow-x-auto text-gray-200">
-                                                    {JSON.stringify(msg.metadata.executionResult, null, 2)}
-                                                </pre>
-                                            </details>
-                                        )}
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                    ))
-                )}
+                                </div>
+                            ))}
 
-                {/* Loading Indicator */}
-                {loading && (
-                    <div className="flex justify-start">
-                        <div className="bg-[#1a2332] border border-white/10 shadow-sm rounded-lg p-4 flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                            <span className="text-gray-300">
-                                {mode === 'planning' ? 'Analyzing with SAGE-CODE...' : 'Generating SQL...'}
-                            </span>
+                            {/* Loading */}
+                            {loading && (
+                                <div className="flex justify-start">
+                                    <div className="bg-[#151d2d] border border-white/5 rounded-2xl rounded-bl-md p-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative">
+                                                <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
+                                            </div>
+                                            <span className="text-gray-400 text-sm">
+                                                {mode === "planning"
+                                                    ? "Analyzing with SAGE-CODE..."
+                                                    : "Generating SQL..."}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div ref={messagesEndRef} />
                         </div>
+                    )}
+                </div>
+
+                {/* Input Area */}
+                <div className="mt-4 relative">
+                    <div className="flex items-center gap-3 p-2 bg-[#0d1520] border border-white/10 rounded-2xl focus-within:border-violet-500/50 focus-within:ring-2 focus-within:ring-violet-500/20 transition-all">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            placeholder="Ask a question about your clinical trial data..."
+                            className="flex-1 px-4 py-3 bg-transparent text-white placeholder-gray-500 focus:outline-none text-sm"
+                            disabled={loading}
+                        />
+                        <button
+                            type="button"
+                            onClick={handleSend}
+                            disabled={loading || !input.trim()}
+                            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm transition-all ${loading || !input.trim()
+                                ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                                : mode === "planning"
+                                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:shadow-lg hover:shadow-blue-500/25"
+                                    : "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-orange-500/25"
+                                }`}
+                        >
+                            {loading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Send className="w-4 h-4" />
+                            )}
+                            <span>Send</span>
+                        </button>
                     </div>
-                )}
-
-                <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Area */}
-            <div className="mt-4 flex gap-2">
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask a question about your clinical trial data..."
-                    className="flex-1 px-4 py-3 bg-[#0f1419] border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    disabled={loading}
-                />
-                <button
-                    onClick={handleSend}
-                    disabled={loading || !input.trim()}
-                    className={`px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors ${loading || !input.trim()
-                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                        : mode === 'planning'
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'bg-orange-500 text-white hover:bg-orange-600'
-                        }`}
-                >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    Send
-                </button>
+                </div>
             </div>
         </div>
     );

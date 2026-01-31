@@ -6,6 +6,8 @@ import { SiteHealthDashboard } from './components/SiteHealthDashboard';
 import { DQIScores } from './components/DQIScores';
 import { Analytics } from './components/Analytics';
 import { DigitalTwinSimulator } from './components/DigitalTwinSimulator';
+import { Clustering3D } from './components/Clustering3D';
+import { DebateCouncil } from './components/DebateCouncil';
 import { Alerts } from './components/Alerts';
 import { Actions } from './components/Actions';
 import { Reports } from './components/Reports';
@@ -36,6 +38,10 @@ export default function App() {
         return <Analytics onAiClick={openAiModal} />;
       case 'simulator':
         return <DigitalTwinSimulator />;
+      case 'clustering':
+        return <Clustering3D />;
+      case 'debate':
+        return <DebateCouncil />;
       case 'alerts':
         return <Alerts onAiClick={openAiModal} />;
       case 'actions':
@@ -68,7 +74,7 @@ export default function App() {
       <div className="relative flex h-screen">
         <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
 
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-8 pl-10">
           {renderSection()}
         </main>
       </div>

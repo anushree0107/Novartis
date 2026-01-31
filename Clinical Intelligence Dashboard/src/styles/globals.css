@@ -1,0 +1,231 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+:root {
+    /* Core colors */
+    --background: oklch(0.11 0.01 260);
+    --foreground: oklch(0.95 0 0);
+    --card: oklch(0.15 0.01 260);
+    --card-foreground: oklch(0.95 0 0);
+    --popover: oklch(0.15 0.01 260);
+    --popover-foreground: oklch(0.95 0 0);
+    --primary: oklch(0.95 0 0);
+    --primary-foreground: oklch(0.11 0.01 260);
+    --secondary: oklch(0.2 0.01 260);
+    --secondary-foreground: oklch(0.95 0 0);
+    --muted: oklch(0.2 0.01 260);
+    --muted-foreground: oklch(0.65 0 0);
+    --accent: oklch(0.6 0.15 200);
+    --accent-foreground: oklch(0.95 0 0);
+    --destructive: oklch(0.55 0.2 25);
+    --destructive-foreground: oklch(0.95 0 0);
+    --border: oklch(0.25 0.01 260);
+    --input: oklch(0.2 0.01 260);
+    --ring: oklch(0.6 0.15 200);
+
+    /* Chart colors */
+    --chart-1: oklch(0.65 0.2 25);
+    --chart-2: oklch(0.65 0.15 145);
+    --chart-3: oklch(0.6 0.15 200);
+    --chart-4: oklch(0.7 0.15 85);
+    --chart-5: oklch(0.6 0.15 280);
+
+    /* Radius */
+    --radius: 0.5rem;
+
+    /* Sidebar colors */
+    --sidebar: oklch(0.13 0.01 260);
+    --sidebar-foreground: oklch(0.95 0 0);
+    --sidebar-primary: oklch(0.6 0.15 200);
+    --sidebar-primary-foreground: oklch(0.95 0 0);
+    --sidebar-accent: oklch(0.2 0.01 260);
+    --sidebar-accent-foreground: oklch(0.95 0 0);
+    --sidebar-border: oklch(0.25 0.01 260);
+    --sidebar-ring: oklch(0.6 0.15 200);
+
+    /* Agent colors */
+    --hawk: oklch(0.65 0.2 25);
+    --hawk-muted: oklch(0.25 0.05 25);
+    --dove: oklch(0.65 0.15 145);
+    --dove-muted: oklch(0.25 0.03 145);
+    --owl: oklch(0.6 0.15 200);
+    --owl-muted: oklch(0.25 0.03 200);
+
+    /* Verdict colors */
+    --verdict-clear: oklch(0.65 0.15 145);
+    --verdict-watch: oklch(0.7 0.15 85);
+    --verdict-alert: oklch(0.65 0.2 25);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border-color: var(--border);
+}
+
+body {
+    font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--background);
+    color: var(--foreground);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(55, 65, 81, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(55, 65, 81, 0.8);
+}
+
+/* Utility classes for the design system */
+.bg-background {
+    background-color: var(--background);
+}
+
+.bg-foreground {
+    background-color: var(--foreground);
+}
+
+.bg-card {
+    background-color: var(--card);
+}
+
+.bg-secondary {
+    background-color: var(--secondary);
+}
+
+.bg-muted {
+    background-color: var(--muted);
+}
+
+.bg-accent {
+    background-color: var(--accent);
+}
+
+.bg-sidebar {
+    background-color: var(--sidebar);
+}
+
+.text-foreground {
+    color: var(--foreground);
+}
+
+.text-muted-foreground {
+    color: var(--muted-foreground);
+}
+
+.text-accent {
+    color: var(--accent);
+}
+
+.text-accent-foreground {
+    color: var(--accent-foreground);
+}
+
+.border-border {
+    border-color: var(--border);
+}
+
+.border-sidebar-border {
+    border-color: var(--sidebar-border);
+}
+
+/* Agent color utilities */
+.bg-hawk {
+    background-color: var(--hawk);
+}
+
+.bg-hawk-muted {
+    background-color: var(--hawk-muted);
+}
+
+.text-hawk {
+    color: var(--hawk);
+}
+
+.border-hawk {
+    border-color: var(--hawk);
+}
+
+.bg-dove {
+    background-color: var(--dove);
+}
+
+.bg-dove-muted {
+    background-color: var(--dove-muted);
+}
+
+.text-dove {
+    color: var(--dove);
+}
+
+.border-dove {
+    border-color: var(--dove);
+}
+
+.bg-owl {
+    background-color: var(--owl);
+}
+
+.bg-owl-muted {
+    background-color: var(--owl-muted);
+}
+
+.text-owl {
+    color: var(--owl);
+}
+
+.border-owl {
+    border-color: var(--owl);
+}
+
+/* Verdict color utilities */
+.bg-verdict-clear {
+    background-color: var(--verdict-clear);
+}
+
+.text-verdict-clear {
+    color: var(--verdict-clear);
+}
+
+.border-verdict-clear {
+    border-color: var(--verdict-clear);
+}
+
+.bg-verdict-watch {
+    background-color: var(--verdict-watch);
+}
+
+.text-verdict-watch {
+    color: var(--verdict-watch);
+}
+
+.border-verdict-watch {
+    border-color: var(--verdict-watch);
+}
+
+.bg-verdict-alert {
+    background-color: var(--verdict-alert);
+}
+
+.text-verdict-alert {
+    color: var(--verdict-alert);
+}
+
+.border-verdict-alert {
+    border-color: var(--verdict-alert);
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { ChevronDown, Loader2, BarChart3 } from 'lucide-react';
 import { fetchDQI as fetchDQIApi, DQIResponse } from '../services/api';
 
 interface DQIScoresProps {
@@ -119,11 +119,14 @@ export function DQIScores({ onAiClick }: DQIScoresProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="bg-gradient-to-r from-[#3b82f6] to-[#2563eb] bg-clip-text text-transparent mb-2">
-          Data Quality Index
-        </h2>
-        <p className="text-gray-400 text-sm">
+      <div className="py-5 mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <BarChart3 className="w-8 h-8 text-blue-400" />
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent">
+            Data Quality Index
+          </h2>
+        </div>
+        <p className="text-gray-400 text-sm ml-11">
           Monitor and analyze data quality metrics across entities
         </p>
       </div>
