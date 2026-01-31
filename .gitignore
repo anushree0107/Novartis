@@ -83,3 +83,7 @@ dashboard/
 
 # Generated Images
 Gemini_Generated_Image_*.png
+
+# Root package files (unused)
+/package.json
+/package-lock.json
