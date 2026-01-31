@@ -328,7 +328,6 @@ Novartis/
 # Clone repository
 git clone https://github.com/anushree0107/Novartis.git
 cd Novartis
-git checkout unified-text2sql
 
 # Create virtual environment
 python -m venv venv
@@ -505,21 +504,7 @@ settings = Settings(
 
 ---
 
-## 🧪 Testing
 
-```bash
-# Run all tests
-pytest tests/
-
-# Run specific test suite
-pytest tests/test_sage_engine.py
-pytest tests/test_trials_agents.py
-
-# Run with coverage
-pytest --cov=sage_code --cov=trials tests/
-```
-
----
 
 ## 🤝 Contributing
 
@@ -536,11 +521,6 @@ pytest --cov=sage_code --cov=trials tests/
 This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
 ---
-
-## 👥 Team
-
-**Clinical Intelligence Platform Team**  
-Novartis AI/ML Engineering
 
 ---
 
