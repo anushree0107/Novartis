@@ -364,6 +364,37 @@ DB_PASSWORD=your_password
 OLLAMA_HOST=http://localhost:11434
 ```
 
+### Running the Application
+
+#### Backend (FastAPI)
+
+```bash
+# Navigate to project root
+cd Novartis
+
+# Start the API server
+python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The API will be available at `http://localhost:8000`. API documentation is available at `http://localhost:8000/docs`.
+
+#### Frontend (Next.js Dashboard)
+
+```bash
+# Navigate to frontend directory
+cd "Clinical Intelligence Dashboard"
+
+# Install dependencies (first time only)
+npm install
+
+# Start development server
+npm run dev
+```
+
+The dashboard will be available at `http://localhost:3000`.
+
+> **Note:** Ensure the backend is running before starting the frontend, as the dashboard requires API access.
+
 ---
 
 ## 💻 Usage
