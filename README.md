@@ -1,4 +1,4 @@
-# 🏥 Novartis Clinical Intelligence Platform
+# 🏥 TrialPulse Clinical Intelligence Platform
 
 > **Dual-Mode Text-to-SQL System for Clinical Trial Analytics**
 
